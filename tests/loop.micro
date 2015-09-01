@@ -1,4 +1,4 @@
-OGRAM loop
+PROGRAM loop
 BEGIN
 
     STRING guess := "Guess a number: ";
