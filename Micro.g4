@@ -1,6 +1,6 @@
 grammar Micro;
-Identifier : [a-zA-Z][a-zA-Z0-9]*;
-Intliteral : [0-9]+;
-Keyword : [PROGRAM|BEGIN|END|FUNCTION|READ|WRITE|IF|ELSE|FI|FOR|ROF|CONTINUE|BREAK|RETURN|INT|VOID|STRING|FLOAT];
-Operator : [:=|+|-|*|/|=|!=|<|>|(|)|;|,|<=|>=];
+KEYWORD : 'PROGRAM' | 'BEGIN' | 'END' | 'FUNCTION' | 'READ' | 'WRITE' | 'IF' | 'ELSE' | 'FI' | 'FOR' | 'ROF' | 'CONTINUE' | 'BREAK' | 'RETURN' | 'INT' | 'VOID' | 'STRING' | 'FLOAT';
+IDENTIFIER : ('a'..'z' | 'A'..'Z')('a'..'z' | 'A'..'Z' | '0'..'9')+;
+INTLITERAL : ('0'..'9')+;
+OPERATOR : (':=' | '+' | '-' | '*' | '/' | '=' | '!=' | '<' | '>' | '(' | ')' | ';' | ',' | '<=' | '>=');
 stringliteral : '"~(")*"';
