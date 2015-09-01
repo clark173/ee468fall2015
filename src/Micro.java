@@ -16,33 +16,15 @@ public class Micro {
         String absolute_filename = System.getProperty("user.dir") + "/tests/" + filename;
         try {
             List<String> lines = Files.readAllLines(Paths.get(filename), Charset.defaultCharset());
-            for (String line : lines) {
-                System.out.println(line);
-            }
+            parseFile(lines);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public void getTestFiles() {
-        String test_directory = System.getProperty("user.dir") + "/tests/";
-        File directory = new File(test_directory);
-        File[] fileList = directory.listFiles();
-
-        for (File file : fileList) {
-            if (file.isFile()) {
-                readFiles(directory + "/" + file.getName());
-            }
         }
     }
 
     public static void main(String[] args) {
         Micro micro = new Micro();
         micro.readFiles(args[0]);
-        //micro.getTestFiles();
-        // TODO: Initiate execution
-        // MicroLexer lexer = new MicroLexer(new ANTLRInputStream());
-        // TokenList tokens = new Micro(lexer);
     }
 
 }
