@@ -14,5 +14,16 @@ compiler:
 	javac -cp $(LIB_ANTLR) -d classes src/*.java build/*.java
 clean:
 	rm -rf classes build
+test:
+	@echo "Fibonacci test"
+	java -cp src/ Micro fibonacci.micro
+	@echo "Loop test"
+	java -cp src/ Micro loop.micro
+	@echo "Loopbreak test"
+	java -cp src/ Micro loopbreak.micro
+	@echo "Nested test"
+	java -cp src/ Micro nested.micro
+	@echo "Sqrt test"
+	java -cp src/ Micro sqrt.micro
 
 .PHONY: all group compiler clean
