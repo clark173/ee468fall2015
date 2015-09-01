@@ -8,8 +8,12 @@ import java.util.List;
 
 public class Micro {
 
+    public void parseFile(List<String> lines) {
+        
+    }
+
     public void readFiles(String filename) {
-        //System.out.println(filename);
+        String absolute_filename = System.getProperty("user.dir") + "/tests/" + filename;
         try {
             List<String> lines = Files.readAllLines(Paths.get(filename), Charset.defaultCharset());
             for (String line : lines) {
@@ -34,10 +38,11 @@ public class Micro {
 
     public static void main(String[] args) {
         Micro micro = new Micro();
-        micro.getTestFiles();
-        //TODO: Initiate execution
-        //MicroLexer lexer = new MicroLexer(new ANTLRInputStream());
-        //TokenList tokens = new Micro(lexer);
+        micro.readFiles(args[0]);
+        //micro.getTestFiles();
+        // TODO: Initiate execution
+        // MicroLexer lexer = new MicroLexer(new ANTLRInputStream());
+        // TokenList tokens = new Micro(lexer);
     }
 
 }
