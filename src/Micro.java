@@ -12,38 +12,43 @@ import org.antlr.v4.runtime.*;
 
 
 public class Micro {
+    public static final int COMMENT = 2;
+    public static final int KEYWORD = 3;
+    public static final int IDENTIFIER = 4;
+    public static final int INTLITERAL = 5;
+    public static final int OPERATOR = 6;
+    public static final int WHITESPACE = 7;
+    public static final int STRINGLITERAL = 8;
 
-    public void parseFile(String lines) {
-        MicroLexer lexer = new MicroLexer(new ANTLRInputStream(lines));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        MicroParser parser = new MicroParser(tokens);
-        
-    }
-
-    public void readFiles(String filename) {
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(filename), Charset.defaultCharset());
-            String lineString = "";
-            for (String line : lines) {
-                lineString += line + "\n";
-            }
-            parseFile(lineString);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static void printTokens(Token token) {
+        String tokenType = "";
+        switch(token.getType()) {
+            case COMMENT : tokenType = "COMMENT";
+                 break;
+            case KEYWORD : tokenType = "KEYWORD";
+                 break;
+            case IDENTIFIER : tokenType = "IDENTIFIER";
+                 break;
+            case INTLITERAL : tokenType = "INTLITERAL";
+                 break;
+            case OPERATOR : tokenType = "OPERATOR";
+                 break;
+            case WHITESPACE : tokenType = "WHITESPACE";
+                 break;
+            case STRINGLITERAL : tokenType = "STRINGLITERAL";
+                 break;
         }
+        System.out.println("Token Type: " + tokenType);
+        System.out.println("Value: " + token.getText());
     }
 
     public static void main(String[] args) throws Exception {
         MicroLexer lexer = new MicroLexer(new ANTLRFileStream(args[0]));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        for (Object o : tokens.getTokens()){
-            CommonToken token = (CommonToken)o;
-            System.out.println("token: " + token.getText());
-        }    
-    
-        System.out.println(tokens.getTokens());
-        Micro micro = new Micro();
-        micro.readFiles(args[0]);
+        tokens.fill();
+        for (Token token : tokens.getTokens()) {
+            printTokens(token);
+        }
     }
 
 }
