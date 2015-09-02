@@ -6,4 +6,5 @@ INTLITERAL : ('0'..'9')+;
 OPERATOR : (':=' | '+' | '-' | '*' | '/' | '=' | '!=' | '<' | '>' | '(' | ')' | ';' | ',' | '<=' | '>=');
 WHITESPACE : [ \t\n\r]+ -> skip;
 STRINGLITERAL : '"'~["]*'"';
+FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 stringliteral : '"~(")*"';

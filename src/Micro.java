@@ -19,6 +19,7 @@ public class Micro {
     public static final int OPERATOR = 6;
     public static final int WHITESPACE = 7;
     public static final int STRINGLITERAL = 8;
+    public static final int FLOAT = 9;
 
     public static void printTokens(Token token) {
         String tokenType = "";
@@ -37,6 +38,8 @@ public class Micro {
                  break;
             case STRINGLITERAL : tokenType = "STRINGLITERAL";
                  break;
+            case FLOAT : tokenType = "FLOATLITERAL";
+                 break;
         }
         System.out.println("Token Type: " + tokenType);
         System.out.println("Value: " + token.getText());
@@ -47,7 +50,9 @@ public class Micro {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         tokens.fill();
         for (Token token : tokens.getTokens()) {
-            printTokens(token);
+            if (token.getType() != -1) {
+                printTokens(token);
+            }
         }
     }
 
