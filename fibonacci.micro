@@ -1,4 +1,4 @@
-OGRAM fibonacci
+PROGRAM fibonacci
 BEGIN
 
     STRING input := "Please input an integer number: ";
