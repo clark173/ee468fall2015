@@ -16,7 +16,7 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
 pgm_body : decl func_declarations;
-decl : string_decl decl | var_decl decl;
+decl : string_decl decl | var_decl decl | '';
 
 /* Global String Declaration */
 string_decl : 'STRING' id ':=' str ';' ;

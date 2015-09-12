@@ -19,11 +19,13 @@ public class Micro {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         tokens.fill();
         MicroParser parser = new MicroParser(tokens);
-
-        //ANTLRErrorStrategy es = new CustomErrorStrategy();
-        //parser.setErrorHandler(es);
-
-        System.out.println("Accepted");
+        parser.program();
+        if (parser.getNumberOfSyntaxErrors() > 0) {
+            System.out.println("Not accepted");
+        }
+        else {
+            System.out.println("Accepted");
+        }
     }
 
 }
