@@ -49,7 +49,7 @@ assign_stmt : assign_expr ';' ;
 assign_expr : id ':=' expr;
 read_stmt : 'READ' '(' id_list ')'';' ;
 write_stmt : 'WRITE' '(' id_list ')'';';
-return_stmt : 'RETURN' expr ;
+return_stmt : 'RETURN' expr ';';
 
 /* Expressions */
 expr : expr_prefix factor;
@@ -66,7 +66,7 @@ mulop : '*' | '/';
 
 /* Complex Statements and Condition */
 if_stmt : 'IF' '(' cond ')' decl stmt_list else_part 'FI';
-else_part : 'ELSE' decl stmt_list | '';
+else_part : 'ELSE' decl stmt_list | ;
 cond : expr compop expr;
 compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
