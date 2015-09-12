@@ -19,6 +19,7 @@ public class Micro {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         tokens.fill();
         MicroParser parser = new MicroParser(tokens);
+        parser.removeErrorListeners();
         parser.program();
         if (parser.getNumberOfSyntaxErrors() > 0) {
             System.out.println("Not accepted");
