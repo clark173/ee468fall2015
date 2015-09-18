@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.*;
 
 
 public class Micro {
@@ -20,13 +21,10 @@ public class Micro {
         tokens.fill();
         MicroParser parser = new MicroParser(tokens);
         parser.removeErrorListeners();
-        parser.program();
-        if (parser.getNumberOfSyntaxErrors() > 0) {
-            System.out.println("Not accepted");
-        }
-        else {
-            System.out.println("Accepted");
-        }
+        MicroParser.ProgramContext microContext = parser.program();
+        ParseTreeWalker walker = new ParseTreeWalker();
+        MicroVariableListener listener = new MicroVariableListener();
+        walker.walk(listener, microContext);
     }
 
 }
