@@ -15,7 +15,10 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [ArrayList<String> globals = new ArrayList<String>()] : DECL=decl func_declarations {
+pgm_body locals 
+[ArrayList<String> globals = new ArrayList<String>(),
+int block_num = 1] : decl func_declarations {
+    System.out.println("Symbol table GLOBAL");
     for (String var : $globals) {
         System.out.println(var);
     }
@@ -47,7 +50,9 @@ param_decl_tail : ',' param_decl param_decl_tail | ;
 
 /* Function Declarations */
 func_declarations : func_decl func_declarations | ;
-func_decl : 'FUNCTION' any_type id '('param_decl_list')' 'BEGIN' func_body 'END';
+func_decl : 'FUNCTION' any_type ID=id '('param_decl_list')' 'BEGIN' func_body 'END' {
+    System.out.println("Symbol table " + $ID.text);
+};
 func_body : decl stmt_list;
 
 /* Statement List */
@@ -76,7 +81,9 @@ addop : '+' | '-';
 mulop : '*' | '/';
 
 /* Complex Statements and Condition */
-if_stmt : 'IF' '(' cond ')' decl stmt_list else_part 'FI';
+if_stmt : 'IF' '(' cond ')' decl stmt_list else_part 'FI' {
+    System.out.println("Symbol table BLOCK " + $pgm_body::block_num++);
+};
 else_part : 'ELSE' decl stmt_list | ;
 cond : expr compop expr;
 compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
@@ -84,4 +91,6 @@ compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
 init_stmt : assign_expr | ;
 incr_stmt : assign_expr | ;
 
-for_stmt : 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' decl stmt_list 'ROF';
+for_stmt : 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' decl stmt_list 'ROF' {
+    System.out.println("Symbol table BLOCK " + $pgm_body::block_num++);
+};
