@@ -21,10 +21,11 @@ public class Micro {
         tokens.fill();
         MicroParser parser = new MicroParser(tokens);
         parser.removeErrorListeners();
-        MicroParser.ProgramContext microContext = parser.program();
-        ParseTreeWalker walker = new ParseTreeWalker();
-        MicroVariableListener listener = new MicroVariableListener();
-        walker.walk(listener, microContext);
+        parser.program();
+        if (parser.getNumberOfSyntaxErrors() > 0) {
+            System.out.println("Invalid micro file.");
+            System.exit(1);
+        }
     }
 
 }

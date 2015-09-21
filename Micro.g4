@@ -15,15 +15,26 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body : decl func_declarations;
+pgm_body locals [ArrayList<String> globals = new ArrayList<String>()] : DECL=decl func_declarations {
+    for (String var : $globals) {
+        System.out.println(var);
+    }
+};
 decl : string_decl decl | var_decl decl | ;
 
 /* Global String Declaration */
-string_decl : 'STRING' id ':=' str ';' ;
+string_decl : 'STRING' ID=id ':=' VAL=str ';' {
+    $pgm_body::globals.add("name " + $ID.text + " type STRING value " + $VAL.text);
+} ;
 str : STRINGLITERAL;
 
 /* Variable Declaration */
-var_decl : var_type id_list ';' ;
+var_decl : TYPE=var_type ID_LIST=id_list ';' {
+    String[] var_list = $ID_LIST.text.split(",");
+    for (String var : var_list) {
+        $pgm_body::globals.add("name " + var + " type " + $TYPE.text);
+    }
+} ;
 var_type : 'FLOAT' | 'INT';
 any_type : var_type | 'VOID';
 id_list : id id_tail;
