@@ -7,17 +7,15 @@ BEGIN
     FUNCTION INT main(INT a)
     BEGIN
     
-    a := 0;
-    b := 0;
+    
+    
      i := 10;
      j := 10;
     
-     WHILE (b < i)
-          b := b + 1;
-          WHILE (a < j)
-               a := a + 1;
-          ENDWHILE
-     ENDWHILE
+    FOR(b := 1; b < i; b := b + 1)            
+        FOR (a := 1; a <= (j - 1); a := a + 1)
+        ROF
+    ROF
 
      WRITE(a);
 

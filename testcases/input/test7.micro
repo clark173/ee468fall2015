@@ -1,39 +1,41 @@
 PROGRAM fibonacci
 BEGIN
 
-    STRING dummy := "abcde";
-
+    STRING input := "Please input an integer number: ";
+    STRING space := " ";
+    STRING eol := "\n";
     INT i,result; 
-
 
     FUNCTION INT F (INT n)
     BEGIN
 
         IF (n > 2)
             RETURN F(n-1)+F(n-2);
-        ENDIF
-        IF (n = 0)   --This is a comment
-            RETURN 0;
         ELSE
-            RETURN 1;
-        ENDIF
+            IF (n = 0)   --This is a comment            
+                RETURN 0;
+            ELSE
+                IF(n = 1)
+                    RETURN 1;
+                ELSE
+                    RETURN 1;
+                FI    
+            FI            
+        FI
     END
-    
-    
+
+
     FUNCTION VOID main ()
     BEGIN
-        
-    INT i, end, result;
+        INT i, end, result;
+        WRITE(input);
         READ(end);
 
-    i := 0;
-    WHILE (i != end)
-        result := F(i);
-        WRITE (i);
-        WRITE (result);
-        i := i + 1; 
-    ENDWHILE
-
+        FOR (i := 0; i != end; i := i + 1)
+            result := F(i);
+            WRITE (i,space);
+            WRITE (result,eol);
+        ROF
 
     END
 

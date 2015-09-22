@@ -10,15 +10,16 @@ BEGIN
   FUNCTION INT main()
     BEGIN
     IF (a = b)
+        
         h:=0;
     ELSE
 
-         WHILE (j<=10)
+        FOR (j := 0; j <= 10; j := j + 1)
              a := j;
-             j := j + 1;        
-         ENDWHILE
+        ROF
 
-    ENDIF
+    FI
+    
     RETURN a+b;
     END
 END
