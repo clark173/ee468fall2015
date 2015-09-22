@@ -13,16 +13,23 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 
 
 /* Program */
-program : 'PROGRAM' id 'BEGIN' pgm_body 'END' {
-    System.out.println("Symbol table GLOBAL");
-};
+program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int block_num = 1] : decl func_declarations;
-decl : string_type=string_decl decl {
-    System.out.println($string_type.res);
+pgm_body locals [int block_num = 1] : DECL=decl FUNC=func_declarations {
+    System.out.println("Symbol table GLOBAL");
+    for (String decl : $DECL.res) {
+        System.out.println(decl);
+    }
+
+    for (String func : $FUNC.res) {
+        System.out.println(func);
+    }
+};
+decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=string_decl decl {
+    $res.add($string_type.res);
 } | var_name=var_decl decl {
     for (String var : $var_name.res) {
-        System.out.println(var);
+        $res.add(var);
     }
 } | ;
 
@@ -51,18 +58,40 @@ param_decl : var_type id;
 param_decl_tail : ',' param_decl param_decl_tail | ;
 
 /* Function Declarations */
-func_declarations : func_decl func_declarations | ;
-func_decl returns [String res] : 'FUNCTION' any_type ID=id '('param_decl_list')' 'BEGIN' func_body 'END' {
-    $res = "Symbol table " + $ID.text;
+func_declarations returns [ArrayList<String> res = new ArrayList<String>();] : FUNC=func_decl func_declarations {
+    $res = $FUNC.res;
+} | ;
+func_decl returns [ArrayList<String> res = new ArrayList<String>();] : 'FUNCTION' any_type ID=id '('param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
+    $res.add("Symbol table " + $ID.text);
+    for (String func : $FUNC.res) {
+        $res.add(func);
+    }
 };
-func_body : decl stmt_list;
+func_body returns [ArrayList<String> res = new ArrayList<String>();] : DECL=decl STMT=stmt_list {
+    for (String decl : $DECL.res) {
+        $res.add(decl);
+    }
+    for (String stmt : $STMT.res) {
+        $res.add(stmt);
+    }
+};
 
 /* Statement List */
-stmt_list : stmt stmt_list | ;
-stmt : base_stmt | IF_BLOCK=if_stmt {
-    System.out.println($IF_BLOCK.res);
+stmt_list returns [ArrayList<String> res = new ArrayList<String>();] : STMT=stmt stmt_list {
+    if ($STMT.res != null && $STMT.res.size() > 0) {
+        for (String stmt : $STMT.res) {
+            $res.add(stmt);
+        }
+    }
+} | ;
+stmt returns [ArrayList<String> res = new ArrayList<String>();] : base_stmt | IF_BLOCK=if_stmt {
+    for (String stmt : $IF_BLOCK.res) {
+        $res.add(stmt);
+    }
 } | FOR_BLOCK=for_stmt {
-    System.out.println($FOR_BLOCK.res);
+    for (String stmt : $FOR_BLOCK.res) {
+        $res.add(stmt);
+    }
 };
 base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
 
@@ -87,8 +116,11 @@ addop : '+' | '-';
 mulop : '*' | '/';
 
 /* Complex Statements and Condition */
-if_stmt returns [String res] : 'IF' '(' cond ')' decl stmt_list else_part 'FI' {
-    $res = "Symbol table BLOCK " + $pgm_body::block_num++;
+if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list else_part 'FI' {
+    $res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    for (String decl : $DECL.res) {
+        $res.add(decl);
+    }
 };
 else_part : 'ELSE' decl stmt_list | ;
 cond : expr compop expr;
@@ -97,6 +129,9 @@ compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
 init_stmt : assign_expr | ;
 incr_stmt : assign_expr | ;
 
-for_stmt returns [String res]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' decl stmt_list 'ROF' {
-    $res = "Symbol table BLOCK " + $pgm_body::block_num++;
+for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF' {
+    $res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    for (String decl : $DECL.res) {
+        $res.add(decl);
+    }
 };
