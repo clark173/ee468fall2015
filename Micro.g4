@@ -67,32 +67,24 @@ func_decl returns [ArrayList<String> res = new ArrayList<String>();] : 'FUNCTION
         $res.add(func);
     }
 };
-func_body returns [ArrayList<String> res = new ArrayList<String>();] : DECL=decl STMT=stmt_list {
+func_body returns [ArrayList<String> res = new ArrayList<String>();] locals [ArrayList<String> stmt_res = new ArrayList<String>();] : DECL=decl stmt_list {
     for (String decl : $DECL.res) {
         $res.add(decl);
     }
-    for (String stmt : $STMT.res) {
+    for (String stmt : $stmt_res) {
         $res.add(stmt);
     }
 };
 
 /* Statement List */
-stmt_list returns [ArrayList<String> res = new ArrayList<String>();] : STMT=stmt stmt_list {
-    if ($STMT.res != null && $STMT.res.size() > 0) {
-        for (String stmt : $STMT.res) {
-            $res.add(stmt);
+stmt_list returns [ArrayList<String> res = new ArrayList<String>();] locals [ArrayList<String> stmt_res = new ArrayList<String>();] : STMT=stmt stmt_list {
+    if ($stmt_res != null && $stmt_res.size() > 0) {
+        for (String stmt : $stmt_res) {
+            $func_body::stmt_res.add(stmt);
         }
     }
 } | ;
-stmt returns [ArrayList<String> res = new ArrayList<String>();] : base_stmt | IF_BLOCK=if_stmt {
-    for (String stmt : $IF_BLOCK.res) {
-        $res.add(stmt);
-    }
-} | FOR_BLOCK=for_stmt {
-    for (String stmt : $FOR_BLOCK.res) {
-        $res.add(stmt);
-    }
-};
+stmt : base_stmt | if_stmt | for_stmt;
 base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
 
 /* Basic Statements */
@@ -117,9 +109,11 @@ mulop : '*' | '/';
 
 /* Complex Statements and Condition */
 if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list else_part 'FI' {
-    $res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    //$res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    $stmt_list::stmt_res.add("Symbol table BLOCK " + $pgm_body::block_num++);
     for (String decl : $DECL.res) {
-        $res.add(decl);
+        $stmt_list::stmt_res.add(decl);
+        //$res.add(decl);
     }
 };
 else_part : 'ELSE' decl stmt_list | ;
@@ -130,8 +124,10 @@ init_stmt : assign_expr | ;
 incr_stmt : assign_expr | ;
 
 for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF' {
-    $res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    //$res.add("Symbol table BLOCK " + $pgm_body::block_num++);
+    $stmt_list::stmt_res.add("Symbol table BLOCK " + $pgm_body::block_num++);
     for (String decl : $DECL.res) {
-        $res.add(decl);
+        $stmt_list::stmt_res.add(decl);
+        //$res.add(decl);
     }
 };
