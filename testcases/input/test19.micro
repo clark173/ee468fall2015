@@ -1,25 +1,26 @@
-PROGRAM nested
+PROGRAM test
 BEGIN
+    STRING str := "test";
+    INT a,b,c,g,h,i,j,k,l,p,o,r,u,y;
 
-    STRING dummy := "abcde";  --This is dummy to satisfy the grammar
 
-    INT i, j, k;
-     
-    FUNCTION VOID main()
+    FUNCTION INT main(INT a)
     BEGIN
-        i := 0;
-        j := 0;
-        k := 0;
-        result := 0;
+    
+    a := 0;
+    b := 0;
+     i := 10;
+     j := 10;
+    
+     WHILE (b < i)
+          b := b + 1;
+          WHILE (a < j)
+               a := a + 1;
+          ENDWHILE
+     ENDWHILE
 
-        FOR ( ; i <= 99; i := i + 1)
-            FOR ( ; j <= 99; j := j + 1)
-                FOR ( ; k < 100; k := k + 1)
-                    result := result + 1;
-                ROF
-            ROF
-        ROF
+     WRITE(a);
 
-        WRITE (result);
+    RETURN a+b;
     END
 END

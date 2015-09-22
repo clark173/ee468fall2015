@@ -7,35 +7,36 @@ BEGIN
 
     FUNCTION INT F (INT n)
     BEGIN
-
-        IF (n > 2)
-            RETURN F(n-1)+F(n-2);
+          INT n1;
+          
+          n1 := n;
+          
+        IF (n1 > 2)
+            RETURN F(n1-1)+F(n1-2);
+        ENDIF
+        IF (n1 = 0) --This is a comment
+            RETURN 0;
         ELSE
-            IF (n = 0)   --This is a comment			
-                RETURN 0;
-            ELSE
-                IF(n = 1)
-                    RETURN 1;
-                ELSE
-                    RETURN 1;
-                FI    
-            FI            
-        FI
+            RETURN 1;
+        ENDIF
+
     END
-
-
+    
+    
     FUNCTION VOID main ()
     BEGIN
         INT i, end, result;
         WRITE(input);
         READ(end);
 
-        FOR (i := 0; i != end; i := i + 1)
-            result := F(i);
-            WRITE (i,space);
-            WRITE (result,eol);
-        ROF
+    i := 0;
+    WHILE (i != end)
+        result := F(i);
+        WRITE (i,space);
+        WRITE (result,eol);
+        i := i + 1; 
+    ENDWHILE
 
     END
 
-END	
+END
