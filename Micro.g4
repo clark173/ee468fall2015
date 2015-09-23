@@ -158,6 +158,25 @@ mulop : '*' | '/';
 /* Complex Statements and Condition */
 if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list ELSE=else_part 'FI' {
     $stmt_list::stmt_res.add("\nSymbol table BLOCK ");
+    ArrayList<String> locals = new ArrayList<String>();
+    for (String loc : $DECL.res) {
+        String[] split = loc.split(" ");
+        if (split.length > 5) {
+            if (locals.contains(split[4])) {
+                System.out.println("DECLARATION ERROR " + split[4]);
+                System.exit(1);
+            }
+            locals.add(split[4]);
+        }
+        else {
+            if (locals.contains(split[1])) {
+                System.out.println("DECLARATION ERROR " + split[1]);
+                System.exit(1);
+            }
+            locals.add(split[1]);
+        }
+    }
+
     for (String decl : $DECL.res) {
         $stmt_list::stmt_res.add(decl);
     }
@@ -166,7 +185,7 @@ if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' co
         $stmt_list::stmt_res.add(else_decl);
     }
 };
-else_part returns [ArrayList<String> res = new ArrayList<String>();]: 'ELSE' DECL=decl stmt_list {
+else_part returns [ArrayList<String> res = new ArrayList<String>();] : 'ELSE' DECL=decl stmt_list {
     $res.add("\nSymbol table BLOCK ");
     for (String decl : $DECL.res) {
         $res.add(decl);
@@ -180,6 +199,25 @@ incr_stmt : assign_expr | ;
 
 for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF' {
     $stmt_list::stmt_res.add("\nSymbol table BLOCK ");
+    ArrayList<String> locals = new ArrayList<String>();
+    for (String loc : $DECL.res) {
+        String[] split = loc.split(" ");
+        if (split.length > 5) {
+            if (locals.contains(split[4])) {
+                System.out.println("DECLARATION ERROR " + split[4]);
+                System.exit(1);
+            }
+            locals.add(split[4]);
+        }
+        else {
+            if (locals.contains(split[1])) {
+                System.out.println("DECLARATION ERROR " + split[1]);
+                System.exit(1);
+            }
+            locals.add(split[1]);
+        }
+    }
+
     for (String decl : $DECL.res) {
         $stmt_list::stmt_res.add(decl);
     }
