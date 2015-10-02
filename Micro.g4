@@ -19,20 +19,11 @@ pgm_body locals [int block_num = 1] : DECL=decl FUNC=func_declarations {
     ArrayList<String> globals = new ArrayList<String>();
     for (String glob : $DECL.res) {
         String[] split = glob.split(" ");
-        if (split.length > 5) {
-            if (globals.contains(split[4])) {
-                System.out.println("DECLARATION ERROR " + split[4]);
-                System.exit(1);
-            }
-            globals.add(split[4]);
+        if (globals.contains(split[1])) {
+            System.out.println("DECLARATION ERROR " + split[1]);
+            System.exit(1);
         }
-        else {
-            if (globals.contains(split[1])) {
-                System.out.println("DECLARATION ERROR " + split[1]);
-                System.exit(1);
-            }
-            globals.add(split[1]);
-        }
+        globals.add(split[1]);
     }
 
     System.out.println("Symbol table GLOBAL");
@@ -161,22 +152,12 @@ if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' co
     ArrayList<String> locals = new ArrayList<String>();
     for (String loc : $DECL.res) {
         String[] split = loc.split(" ");
-        if (split.length > 5) {
-            if (locals.contains(split[4])) {
-                System.out.println("DECLARATION ERROR " + split[4]);
-                System.exit(1);
-            }
-            locals.add(split[4]);
+        if (locals.contains(split[1])) {
+            System.out.println("DECLARATION ERROR " + split[1]);
+            System.exit(1);
         }
-        else {
-            if (locals.contains(split[1])) {
-                System.out.println("DECLARATION ERROR " + split[1]);
-                System.exit(1);
-            }
-            locals.add(split[1]);
-        }
+        locals.add(split[1]);
     }
-
     for (String decl : $DECL.res) {
         $stmt_list::stmt_res.add(decl);
     }
@@ -202,22 +183,12 @@ for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' i
     ArrayList<String> locals = new ArrayList<String>();
     for (String loc : $DECL.res) {
         String[] split = loc.split(" ");
-        if (split.length > 5) {
-            if (locals.contains(split[4])) {
-                System.out.println("DECLARATION ERROR " + split[4]);
-                System.exit(1);
-            }
-            locals.add(split[4]);
+        if (locals.contains(split[1])) {
+            System.out.println("DECLARATION ERROR " + split[1]);
+            System.exit(1);
         }
-        else {
-            if (locals.contains(split[1])) {
-                System.out.println("DECLARATION ERROR " + split[1]);
-                System.exit(1);
-            }
-            locals.add(split[1]);
-        }
+        locals.add(split[1]);
     }
-
     for (String decl : $DECL.res) {
         $stmt_list::stmt_res.add(decl);
     }
