@@ -15,26 +15,7 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int block_num = 1] : DECL=decl FUNC=func_declarations {
-    ArrayList<String> globals = new ArrayList<String>();
-    for (String glob : $DECL.res) {
-        String[] split = glob.split(" ");
-        if (globals.contains(split[1])) {
-            System.out.println("DECLARATION ERROR " + split[1]);
-            System.exit(1);
-        }
-        globals.add(split[1]);
-    }
-
-    System.out.println("Symbol table GLOBAL");
-    for (String decl : $DECL.res) {
-        System.out.println(decl);
-    }
-
-    for (String func : $FUNC.res) {
-        System.out.println(func);
-    }
-};
+pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations;
 decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=string_decl string_DECL=decl {
     $res.add($string_type.res);
     for (String var : $string_DECL.res) {
@@ -55,6 +36,7 @@ string_decl returns [String res] : 'STRING' ID=id ':=' VAL=str ';' {
 };
 str : STRINGLITERAL;
 
+
 /* Variable Declaration */
 var_decl returns [ArrayList<String> res] : TYPE=var_type ID_LIST=id_list ';' {
     String[] var_list = $ID_LIST.text.split(",");
@@ -65,8 +47,16 @@ var_decl returns [ArrayList<String> res] : TYPE=var_type ID_LIST=id_list ';' {
 } ;
 var_type : 'FLOAT' | 'INT';
 any_type : var_type | 'VOID';
-id_list : id id_tail;
+id_list returns [ArrayList<String> res = new ArrayList<String>();] : ID=id TAIL=id_tail {
+    $res.add($ID.text);
+    String[] list = $TAIL.text.split(",");
+    for (int i = 0; i < list.length - 1; i++)
+    {
+        $res.add(list[i]);
+    }
+} ;
 id_tail : ',' id id_tail | ;
+
 
 /* Function Paramater List */
 param_decl_list returns [ArrayList<String> res = new ArrayList<String>();] : PARAM=param_decl PARAM_TAIL=param_decl_tail {
@@ -84,6 +74,7 @@ param_decl_tail returns [ArrayList<String> res = new ArrayList<String>();] : ','
         $res.add(var);
     }
 } | ;
+
 
 /* Function Declarations */
 func_declarations returns [ArrayList<String> res = new ArrayList<String>();] : FUNC=func_decl FUNC_DECL=func_declarations {
@@ -110,86 +101,87 @@ func_body returns [ArrayList<String> res = new ArrayList<String>();] locals [Arr
     }
 };
 
+
 /* Statement List */
 stmt_list returns [ArrayList<String> res = new ArrayList<String>();] locals [ArrayList<String> stmt_res = new ArrayList<String>();] : STMT=stmt stmt_list {
-    if ($stmt_res != null && $stmt_res.size() > 0) {
-        for (String stmt : $stmt_res) {
-            if (stmt.contains("Symbol table BLOCK")) {
-                $func_body::stmt_res.add(stmt + $pgm_body::block_num++);
-            }
-            else {
-                $func_body::stmt_res.add(stmt);
-            }
-        }
-    }
 } | ;
 stmt : base_stmt | if_stmt | for_stmt;
 base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
 
+
 /* Basic Statements */
 assign_stmt : assign_expr ';' ;
-assign_expr : id ':=' expr;
-read_stmt : 'READ' '(' id_list ')'';' ;
-write_stmt : 'WRITE' '(' id_list ')'';';
+assign_expr : ID=id ':=' EXPR=expr {
+    if ($EXPR.res != null) {
+        String[] split = $EXPR.res.split(" ");
+        if (split.length > 1) {
+            System.out.println("STORE" + split[1] + " " + split[0] + " \$T" + $pgm_body::var_num);
+            System.out.println("STORE" + split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+        }
+    }
+} ;
+read_stmt : 'READ' '(' ID_LIST=id_list ')'';' {
+    for (String var : $ID_LIST.res) {
+        System.out.println("READI " + var);
+    }
+};
+write_stmt : 'WRITE' '(' ID_LIST=id_list ')'';' {
+    for (String var : $ID_LIST.res) {
+        System.out.println("WRITEI " + var);
+    }
+};
 return_stmt : 'RETURN' expr ';';
 
+
 /* Expressions */
-expr : expr_prefix factor;
-expr_prefix : expr_prefix factor addop | ;
-factor : factor_prefix postfix_expr;
-factor_prefix : factor_prefix postfix_expr mulop | ;
-postfix_expr : primary | call_expr;
+expr returns [String res] : expr_prefix FACTOR=factor {
+    $res = $FACTOR.res;
+} ;
+expr_prefix : expr_prefix FACTOR=factor OP=addop {
+    char op = $OP.text.charAt(0);
+    if (op == '+') {
+        System.out.println("ADDI " + $FACTOR.res + " \$T" + $pgm_body::var_num++);
+    }
+    else {
+        System.out.println("SUBI " + $FACTOR.res + " \$T" + $pgm_body::var_num++);
+    }
+} | ;
+factor returns [String res] : factor_prefix POST=postfix_expr {
+    $res = $POST.res;
+} ;
+factor_prefix : factor_prefix POST=postfix_expr OP=mulop {
+    char op = $OP.text.charAt(0);
+    if (op == '*') {
+        System.out.println("MULTI " + $POST.res + " \$T" + $pgm_body::var_num++);
+    }
+    else {
+        System.out.println("DIVI " + $POST.res + " \$T" + $pgm_body::var_num++);
+    }
+} | ;
+postfix_expr returns [String res] : PRIMARY=primary {
+    $res = $PRIMARY.res;
+} | call_expr;
 call_expr : id '(' expr_list ')';
 expr_list : expr expr_list_tail | ;
 expr_list_tail : ',' expr expr_list_tail | ;
-primary : '(' expr ')' | id | INTLITERAL | FLOATLITERAL;
+primary returns [String res] : '(' expr ')' | ID=id {
+    $res = $ID.text;
+} | in=INTLITERAL {
+    $res = $in.text + " I";
+} | flo=FLOATLITERAL {
+    $res = $flo.text + " F";
+} ;
 addop : '+' | '-';
 mulop : '*' | '/';
 
-/* Complex Statements and Condition */
-if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list ELSE=else_part 'FI' {
-    $stmt_list::stmt_res.add("\nSymbol table BLOCK ");
-    ArrayList<String> locals = new ArrayList<String>();
-    for (String loc : $DECL.res) {
-        String[] split = loc.split(" ");
-        if (locals.contains(split[1])) {
-            System.out.println("DECLARATION ERROR " + split[1]);
-            System.exit(1);
-        }
-        locals.add(split[1]);
-    }
-    for (String decl : $DECL.res) {
-        $stmt_list::stmt_res.add(decl);
-    }
 
-    for (String else_decl : $ELSE.res) {
-        $stmt_list::stmt_res.add(else_decl);
-    }
-};
-else_part returns [ArrayList<String> res = new ArrayList<String>();] : 'ELSE' DECL=decl stmt_list {
-    $res.add("\nSymbol table BLOCK ");
-    for (String decl : $DECL.res) {
-        $res.add(decl);
-    }
-} | ;
+/* Complex Statements and Condition */
+if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list ELSE=else_part 'FI';
+else_part returns [ArrayList<String> res = new ArrayList<String>();] : 'ELSE' DECL=decl stmt_list | ;
 cond : expr compop expr;
 compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
 init_stmt : assign_expr | ;
 incr_stmt : assign_expr | ;
 
-for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF' {
-    $stmt_list::stmt_res.add("\nSymbol table BLOCK ");
-    ArrayList<String> locals = new ArrayList<String>();
-    for (String loc : $DECL.res) {
-        String[] split = loc.split(" ");
-        if (locals.contains(split[1])) {
-            System.out.println("DECLARATION ERROR " + split[1]);
-            System.exit(1);
-        }
-        locals.add(split[1]);
-    }
-    for (String decl : $DECL.res) {
-        $stmt_list::stmt_res.add(decl);
-    }
-};
+for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF';
