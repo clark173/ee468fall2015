@@ -112,51 +112,40 @@ base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
 /* Basic Statements */
 assign_stmt : assign_expr ';' ;
 assign_expr : ID=id ':=' EXPR=expr {
-    if ($EXPR.res != null) {
+    System.out.println($EXPR.res);
+    /*if ($EXPR.res != null) {
         String[] split = $EXPR.res.split(" ");
         if (split.length > 1) {
-            System.out.println("STORE" + split[1] + " " + split[0] + " \$T" + $pgm_body::var_num);
-            System.out.println("STORE" + split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+            //System.out.println(";STORE" + split[1] + " " + split[0] + " \$T" + $pgm_body::var_num);
+            //System.out.println(";STORE" + split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
         }
-    }
+    }*/
 } ;
 read_stmt : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        System.out.println("READI " + var);
+        System.out.println(";READI " + var);
     }
 };
 write_stmt : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        System.out.println("WRITEI " + var);
+        System.out.println(";WRITEI " + var);
     }
 };
 return_stmt : 'RETURN' expr ';';
 
 
 /* Expressions */
-expr returns [String res] : expr_prefix FACTOR=factor {
-    $res = $FACTOR.res;
+expr returns [String res] : EXP=expr_prefix FACTOR=factor {
+    $res = $EXP.res + " " + $FACTOR.res;
 } ;
-expr_prefix : expr_prefix FACTOR=factor OP=addop {
-    char op = $OP.text.charAt(0);
-    if (op == '+') {
-        System.out.println("ADDI " + $FACTOR.res + " \$T" + $pgm_body::var_num++);
-    }
-    else {
-        System.out.println("SUBI " + $FACTOR.res + " \$T" + $pgm_body::var_num++);
-    }
+expr_prefix returns [String res] : EXP=expr_prefix FACTOR=factor OP=addop {
+    $res = $EXP.res + " " + $FACTOR.res + " " + $OP.text;
 } | ;
-factor returns [String res] : factor_prefix POST=postfix_expr {
-    $res = $POST.res;
+factor returns [String res] : FAC=factor_prefix POST=postfix_expr {
+    $res = $FAC.res + " " + $POST.res;
 } ;
-factor_prefix : factor_prefix POST=postfix_expr OP=mulop {
-    char op = $OP.text.charAt(0);
-    if (op == '*') {
-        System.out.println("MULTI " + $POST.res + " \$T" + $pgm_body::var_num++);
-    }
-    else {
-        System.out.println("DIVI " + $POST.res + " \$T" + $pgm_body::var_num++);
-    }
+factor_prefix returns [String res] : factor_prefix POST=postfix_expr OP=mulop {
+    $res = $POST.res + " " + $OP.text;
 } | ;
 postfix_expr returns [String res] : PRIMARY=primary {
     $res = $PRIMARY.res;
@@ -164,7 +153,9 @@ postfix_expr returns [String res] : PRIMARY=primary {
 call_expr : id '(' expr_list ')';
 expr_list : expr expr_list_tail | ;
 expr_list_tail : ',' expr expr_list_tail | ;
-primary returns [String res] : '(' expr ')' | ID=id {
+primary returns [String res] : '(' EXP=expr ')' {
+    $res = "( " + $EXP.res + " )";
+} | ID=id {
     $res = $ID.text;
 } | in=INTLITERAL {
     $res = $in.text + " I";
