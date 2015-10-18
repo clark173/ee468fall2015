@@ -112,14 +112,45 @@ base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
 /* Basic Statements */
 assign_stmt : assign_expr ';' ;
 assign_expr : ID=id ':=' EXPR=expr {
-    System.out.println($EXPR.res);
-    /*if ($EXPR.res != null) {
-        String[] split = $EXPR.res.split(" ");
-        if (split.length > 1) {
-            //System.out.println(";STORE" + split[1] + " " + split[0] + " \$T" + $pgm_body::var_num);
-            //System.out.println(";STORE" + split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+    String[] split = $EXPR.res.split(" ");
+    int i = 0;
+    String[] new_split = new String[split.length];
+
+    for (String var : split) {
+        if (!var.equals("null") && !var.equals("(") && !var.equals(")")) {
+            new_split[i++] = var;
         }
-    }*/
+    }
+    
+    if (i <= 2) {
+        System.out.println(";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num);
+        System.out.println(";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+    } else {
+        while (i > 1) {
+            char op = new_split[1].charAt(0);
+            
+
+            if (op == '*') {
+                System.out.println(";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+            } else if (op == '/') {
+                System.out.println(";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+            } else if (op == '+') {
+                System.out.println(";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+            } else if (op == '-') {
+                System.out.println(";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+            }
+
+            new_split[0] = "\$T" + ($pgm_body::var_num - 1);
+            
+            for (int j = 1; j < i-2; j++) {
+                new_split[j] = new_split[j+2];
+            }
+
+            i -= 2;
+        }
+
+        System.out.println(";STOREI \$T" + $pgm_body::var_num++ + " " + $ID.text);
+    }
 } ;
 read_stmt : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
