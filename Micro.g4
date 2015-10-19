@@ -234,15 +234,24 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     } else {
         while (i > 1) {
             char op = new_split[1].charAt(0);
+            Boolean follows = false;
+            int ind = 0;
             
+            for (int j = 2; j < i-2; j++) {
+                if (new_split[j].charAt(0) == '*' || new_split[j].charAt(0) == '/') {
+                    follows = true;
+                    ind = j;
+                    break;
+                }
+            }
 
             if (op == '*') {
                 $res += ";MULT" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '/') {
                 $res += ";DIV" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
-            } else if (op == '+') {
+            } else if (op == '+' && follows == false) {
                 $res += ";ADD" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
-            } else if (op == '-') {
+            } else if (op == '-' && follows == false) {
                 $res += ";SUB" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             }
 
@@ -251,11 +260,14 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             for (int j = 1; j < i-2; j++) {
                 new_split[j] = new_split[j+2];
             }
+            for (int j = i-2; j <= i; j++) {
+                new_split[j] = null;
+            }
 
             i -= 2;
         }
 
-        $res += ";STOREI \$T" + $pgm_body::var_num + " " + $ID.text + "\n";
+        $res += ";STORE" + type + " \$T" + $pgm_body::var_num + " " + $ID.text + "\n";
     }
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
