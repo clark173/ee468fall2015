@@ -37,7 +37,7 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
     int i = 0;
     for (String line : split) {
         String[] line_split = line.split(" ");
-        if (line_split[0].equals(";STOREI")) {
+        if (line_split[0].startsWith(";STORE")) {
             if (last) {
                 i--;
             }
@@ -55,6 +55,14 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
                 System.out.println("move " + line_split[1] + " r" + i);
             }
             System.out.println("muli " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";MULTF")) {
+            last = true;
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("mulr " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";ADDI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -63,6 +71,14 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
                 System.out.println("move " + line_split[1] + " r" + i);
             }
             System.out.println("addi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";ADDF")) {
+            last = true;
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("addr " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";SUBI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -71,6 +87,14 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
                 System.out.println("move " + line_split[1] + " r" + i);
             }
             System.out.println("subi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";SUBF")) {
+            last = true;
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("subr " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";DIVI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -79,12 +103,26 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
                 System.out.println("move " + line_split[1] + " r" + i);
             }
             System.out.println("divi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";DIVF")) {
+            last = true;
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("divr " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";WRITEI")) {
             last = false;
             System.out.println("sys writei " + line_split[1]);
+        } else if (line_split[0].equals(";WRITEF")) {
+            last = false;
+            System.out.println("sys writer " + line_split[1]);
         } else if (line_split[0].equals(";READI")) {
             last = false;
             System.out.println("sys readi " + line_split[1]);
+        } else if (line_split[0].equals(";READF")) {
+            last = false;
+            System.out.println("sys readr " + line_split[1]);
         }
     }
     System.out.println("sys halt");
