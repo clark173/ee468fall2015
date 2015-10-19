@@ -15,11 +15,12 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
+pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
     ArrayList<String> vars = new ArrayList<String>();
     for (String var : $DECL.res) {
         String[] split = var.split(" ");
         vars.add(split[1]);
+        $glob_vars.add(split[3].charAt(0) + " " + split[1]);
     }
 
     String out = $FUNC.res.replace("\n\n", "\n");
@@ -180,8 +181,6 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     }
     
     if (i <= 2) {
-        //System.out.println(";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num);
-        //System.out.println(";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
         $res += ";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
         $res += ";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
     } else {
@@ -190,16 +189,12 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             
 
             if (op == '*') {
-                //System.out.println(";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
                 $res += ";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '/') {
-                //System.out.println(";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
                 $res += ";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '+') {
-                //System.out.println(";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
                 $res += ";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '-') {
-                //System.out.println(";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
                 $res += ";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             }
 
@@ -212,19 +207,16 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             i -= 2;
         }
 
-        //System.out.println(";STOREI \$T" + $pgm_body::var_num + " " + $ID.text);
         $res += ";STOREI \$T" + $pgm_body::var_num + " " + $ID.text + "\n";
     }
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        //System.out.println(";READI " + var);
         $res += ";READI " + var + "\n";
     }
 };
 write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        //System.out.println(";WRITEI " + var);
         $res += ";WRITEI " + var + "\n";
     }
 };
