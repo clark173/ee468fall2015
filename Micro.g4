@@ -42,7 +42,9 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
                 i--;
             }
             last = false;
-            if (line_split[2].startsWith("\$T")) {
+            if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else if (line_split[2].startsWith("\$T")) {
                 System.out.println("move " + line_split[1] + " r" + i);
             } else {
                 System.out.println("move r" + i++ + " " + line_split[2]);
