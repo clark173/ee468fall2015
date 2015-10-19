@@ -15,7 +15,58 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations;
+pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
+    String out = $FUNC.res.replace("\n\n", "\n");
+    System.out.println(";IR code");
+    System.out.println(out);
+    System.out.println(";tiny code");
+    
+    String[] split = out.split("\n");
+    int i = 0;
+    for (String line : split) {
+        String[] line_split = line.split(" ");
+        if (line_split[0].equals(";STOREI")) {
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("move " + line_split[1] + " r" + i);
+            } else {
+                System.out.println("move r" + i++ + " " + line_split[2]);
+            }
+        } else if (line_split[0].equals(";MULTI")) {
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("muli " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";ADDI")) {
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("addi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";SUBI")) {
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("subi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";DIVI")) {
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("move r" + (i-1) + " r" + i);
+            } else {
+                System.out.println("move " + line_split[1] + " r" + i);
+            }
+            System.out.println("divi " + line_split[2] + " r" + i++);
+        } else if (line_split[0].equals(";WRITEI")) {
+            System.out.println("sys writei " + line_split[1]);
+        } else if (line_split[0].equals(";READI")) {
+            System.out.println("sys readi " + line_split[1]);
+        }
+    }
+    System.out.println("sys halt");
+};
 decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=string_decl string_DECL=decl {
     $res.add($string_type.res);
     for (String var : $string_DECL.res) {
@@ -65,10 +116,14 @@ param_decl_tail : ',' param_decl param_decl_tail | ;
 
 
 /* Function Declarations */
-func_declarations : func_decl func_declarations | ;
-func_decl : 'FUNCTION' any_type id '('param_decl_list')' 'BEGIN' func_body 'END';
+func_declarations returns [String res = ""] : FUNC=func_decl func_declarations {
+    $res = $FUNC.res;
+} | ;
+func_decl returns [String res = ""] : 'FUNCTION' any_type id '('param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
+    $res = $FUNC.res;
+};
 func_body returns [String res = ""] : decl STMT=stmt_list {
-    System.out.println($STMT.res);
+    $res = $STMT.res;
 };
 
 
@@ -79,7 +134,9 @@ stmt_list returns [String res = ""] : STMT=stmt STMT_LIST=stmt_list {
 stmt returns [String res = ""] : BASE=base_stmt {
     $res = $BASE.res;
 } | if_stmt | for_stmt;
-base_stmt returns [String res = ""] : assign_stmt | READ=read_stmt {
+base_stmt returns [String res = ""] : ASSIGN=assign_stmt {
+    $res = $ASSIGN.res;
+} | READ=read_stmt {
     $res = $READ.res;
 } | WRITE=write_stmt {
     $res = $WRITE.res;
@@ -87,7 +144,9 @@ base_stmt returns [String res = ""] : assign_stmt | READ=read_stmt {
 
 
 /* Basic Statements */
-assign_stmt : assign_expr ';' ;
+assign_stmt returns [String res = ""] : ASSIGN=assign_expr ';' {
+    $res = $ASSIGN.res;
+} ;
 assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     String[] split = $EXPR.res.split(" ");
     int i = 0;
@@ -100,8 +159,8 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     }
     
     if (i <= 2) {
-        System.out.println(";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num);
-        System.out.println(";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+        //System.out.println(";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num);
+        //System.out.println(";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
         $res += ";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
         $res += ";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
     } else {
@@ -110,13 +169,17 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             
 
             if (op == '*') {
-                System.out.println(";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                //System.out.println(";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                $res += ";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '/') {
-                System.out.println(";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                //System.out.println(";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                $res += ";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '+') {
-                System.out.println(";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                //System.out.println(";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                $res += ";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '-') {
-                System.out.println(";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                //System.out.println(";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++);
+                $res += ";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             }
 
             new_split[0] = "\$T" + ($pgm_body::var_num - 1);
@@ -128,7 +191,8 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             i -= 2;
         }
 
-        System.out.println(";STOREI \$T" + $pgm_body::var_num++ + " " + $ID.text);
+        //System.out.println(";STOREI \$T" + $pgm_body::var_num + " " + $ID.text);
+        $res += ";STOREI \$T" + $pgm_body::var_num + " " + $ID.text + "\n";
     }
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
