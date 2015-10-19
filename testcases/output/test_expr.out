@@ -1,4 +1,4 @@
-R code
+;IR code
 ;STOREI 1 $T1
 ;STOREI $T1 a
 ;STOREI 2 $T2
