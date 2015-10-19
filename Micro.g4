@@ -54,7 +54,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("muli " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("muli r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("muli " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";MULTF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -62,7 +67,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("mulr " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("mulr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("mulr " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";ADDI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -70,7 +80,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("addi " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("addi r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("addi " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";ADDF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -78,7 +93,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("addr " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("addr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("addr " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";SUBI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -253,13 +273,26 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
                 $res += ";ADD" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '-' && follows == false) {
                 $res += ";SUB" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
+            } else if (follows == true) {
+                if (new_split[ind].charAt(0) == '*') {
+                    $res += ";MULT" + type + " " + new_split[ind-1] + " " + new_split[ind+1] + " \$T" + $pgm_body::var_num++ + "\n";
+                } else if (new_split[ind].charAt(0) == '/') {
+                    $res += ";DIV" + type + " " + new_split[ind-1] + " " + new_split[ind+1] + " \$T" + $pgm_body::var_num++ + "\n";
+                }
+                new_split[ind-1] = "\$T" + ($pgm_body::var_num - 1);
+
+                for (int j = ind; j < i-2; j++) {
+                    new_split[j] = new_split[j+2];
+                }
             }
 
-            new_split[0] = "\$T" + ($pgm_body::var_num - 1);
-            
-            for (int j = 1; j < i-2; j++) {
-                new_split[j] = new_split[j+2];
+            if (!follows) {
+                new_split[0] = "\$T" + ($pgm_body::var_num - 1);
+                for (int j = 1; j < i-2; j++) {
+                    new_split[j] = new_split[j+2];
+                }
             }
+
             for (int j = i-2; j <= i; j++) {
                 new_split[j] = null;
             }
@@ -267,7 +300,7 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             i -= 2;
         }
 
-        $res += ";STORE" + type + " \$T" + $pgm_body::var_num + " " + $ID.text + "\n";
+        $res += ";STORE" + type + " \$T" + ($pgm_body::var_num-1) + " " + $ID.text + "\n";
     }
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
