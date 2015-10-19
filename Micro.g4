@@ -59,59 +59,36 @@ id_tail : ',' id id_tail | ;
 
 
 /* Function Paramater List */
-param_decl_list returns [ArrayList<String> res = new ArrayList<String>();] : PARAM=param_decl PARAM_TAIL=param_decl_tail {
-    $res.add($PARAM.res);
-    for (String var : $PARAM_TAIL.res) {
-        $res.add(var);
-    }
-} | ;
-param_decl returns [String res] : TYPE=var_type ID=id {
-    $res = "name " + $ID.text + " type " + $TYPE.text;
-};
-param_decl_tail returns [ArrayList<String> res = new ArrayList<String>();] : ',' param=param_decl param_tail=param_decl_tail {
-    $res.add($param.res);
-    for (String var : $param_tail.res) {
-        $res.add(var);
-    }
-} | ;
+param_decl_list : param_decl param_decl_tail | ;
+param_decl : var_type id ;
+param_decl_tail : ',' param_decl param_decl_tail | ;
 
 
 /* Function Declarations */
-func_declarations returns [ArrayList<String> res = new ArrayList<String>();] : FUNC=func_decl FUNC_DECL=func_declarations {
-    $res = $FUNC.res;
-    for (String var : $FUNC_DECL.res) {
-        $res.add(var);
-    }
-} | ;
-func_decl returns [ArrayList<String> res = new ArrayList<String>();] : 'FUNCTION' any_type ID=id '('PARAM=param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
-    $res.add("\nSymbol table " + $ID.text);
-    for (String params : $PARAM.res) {
-        $res.add(params);
-    }
-    for (String func : $FUNC.res) {
-        $res.add(func);
-    }
-};
-func_body returns [ArrayList<String> res = new ArrayList<String>();] locals [ArrayList<String> stmt_res = new ArrayList<String>();] : DECL=decl stmt_list {
-    for (String decl : $DECL.res) {
-        $res.add(decl);
-    }
-    for (String stmt : $stmt_res) {
-        $res.add(stmt);
-    }
+func_declarations : func_decl func_declarations | ;
+func_decl : 'FUNCTION' any_type id '('param_decl_list')' 'BEGIN' func_body 'END';
+func_body returns [String res = ""] : decl STMT=stmt_list {
+    System.out.println($STMT.res);
 };
 
 
 /* Statement List */
-stmt_list returns [ArrayList<String> res = new ArrayList<String>();] locals [ArrayList<String> stmt_res = new ArrayList<String>();] : STMT=stmt stmt_list {
+stmt_list returns [String res = ""] : STMT=stmt STMT_LIST=stmt_list {
+    $res = $STMT.res + "\n" + $STMT_LIST.res;
 } | ;
-stmt : base_stmt | if_stmt | for_stmt;
-base_stmt : assign_stmt | read_stmt | write_stmt | return_stmt;
+stmt returns [String res = ""] : BASE=base_stmt {
+    $res = $BASE.res;
+} | if_stmt | for_stmt;
+base_stmt returns [String res = ""] : assign_stmt | READ=read_stmt {
+    $res = $READ.res;
+} | WRITE=write_stmt {
+    $res = $WRITE.res;
+} | return_stmt;
 
 
 /* Basic Statements */
 assign_stmt : assign_expr ';' ;
-assign_expr : ID=id ':=' EXPR=expr {
+assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     String[] split = $EXPR.res.split(" ");
     int i = 0;
     String[] new_split = new String[split.length];
@@ -125,6 +102,8 @@ assign_expr : ID=id ':=' EXPR=expr {
     if (i <= 2) {
         System.out.println(";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num);
         System.out.println(";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text);
+        $res += ";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
+        $res += ";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
     } else {
         while (i > 1) {
             char op = new_split[1].charAt(0);
@@ -152,14 +131,16 @@ assign_expr : ID=id ':=' EXPR=expr {
         System.out.println(";STOREI \$T" + $pgm_body::var_num++ + " " + $ID.text);
     }
 } ;
-read_stmt : 'READ' '(' ID_LIST=id_list ')'';' {
+read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        System.out.println(";READI " + var);
+        //System.out.println(";READI " + var);
+        $res += ";READI " + var + "\n";
     }
 };
-write_stmt : 'WRITE' '(' ID_LIST=id_list ')'';' {
+write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        System.out.println(";WRITEI " + var);
+        //System.out.println(";WRITEI " + var);
+        $res += ";WRITEI " + var + "\n";
     }
 };
 return_stmt : 'RETURN' expr ';';
