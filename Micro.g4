@@ -253,8 +253,20 @@ assign_stmt returns [String res = ""] : ASSIGN=assign_expr ';' {
 assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     String[] split = $EXPR.res.split(" ");
     int i = 0;
-    String[] new_split = new String[split.length];
+    int x = 0;
     String type = "I";
+
+    for (String line : split) {
+        if (line.contains("_")) {
+            line = line.substring(0, line.length() - 1);
+            split[x] = split[x].substring(0, split[x].length() - 1);
+            $res += line.replace("_", " ");
+            $res += "\n";
+        }
+        x++;
+    }
+
+    String[] new_split = new String[split.length];
 
     if ($pgm_body::glob_vars.contains("I " + $ID.text)) {
         type = "I";
@@ -263,14 +275,17 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     }
 
     for (String var : split) {
-        if (!var.equals("null") && !var.equals("(") && !var.equals(")")) {
+        if (var != null && !var.equals("null") && !var.equals("(") && !var.equals(")")) {
+            if (var.contains("_")) {
+                var = var.substring(var.lastIndexOf("_") + 1);
+            }
             new_split[i++] = var;
         }
     }
 
     if (i <= 2) {
-        $res += ";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
-        $res += ";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
+        $res += ";STORE" + type + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
+        $res += ";STORE" + type + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
     } else {
         while (i > 1) {
             char op = new_split[1].charAt(0);
@@ -366,6 +381,74 @@ expr_list : expr expr_list_tail | ;
 expr_list_tail : ',' expr expr_list_tail | ;
 primary returns [String res] : '(' EXP=expr ')' {
     $res = "( " + $EXP.res + " )";
+
+    String[] split = $EXP.res.split(" ");
+    int i = 0;
+    String[] new_split = new String[split.length];
+    String type = "I";
+
+    $res = "";
+
+    for (String var : split) {
+        if (!var.equals("null") && !var.equals("(") && !var.equals(")")) {
+            new_split[i++] = var;
+        }
+    }
+
+    if ($pgm_body::glob_vars.contains("I " + new_split[0])) {
+        type = "I";
+    } else {
+        type = "F";
+    }
+
+    while (i > 1) {
+        char op = new_split[1].charAt(0);
+        Boolean follows = false;
+        int ind = 0;
+
+        for (int j = 2; j < i-2; j++) {
+            if (new_split[j].charAt(0) == '*' || new_split[j].charAt(0) == '/') {
+                follows = true;
+                ind = j;
+                break;
+            }
+        }
+
+        if (op == '*') {
+            $res += ";MULT" + type + "_" + new_split[0] + "_" + new_split[2] + "_\$T" + $pgm_body::var_num++ + "\n";
+        } else if (op == '/') {
+            $res += ";DIV" + type + "_" + new_split[0] + "_" + new_split[2] + "_\$T" + $pgm_body::var_num++ + "\n";
+        } else if (op == '+' && follows == false) {
+            $res += ";ADD" + type + "_" + new_split[0] + "_" + new_split[2] + "_\$T" + $pgm_body::var_num++ + "\n";
+        } else if (op == '-' && follows == false) {
+            $res += ";SUB" + type + "_" + new_split[0] + "_" + new_split[2] + "_\$T" + $pgm_body::var_num++ + "\n";
+        } else if (follows == true) {
+            if (new_split[ind].charAt(0) == '*') {
+                $res += ";MULT" + type + "_" + new_split[ind-1] + "_" + new_split[ind+1] + "_\$T" + $pgm_body::var_num++ + "\n";
+            } else if (new_split[ind].charAt(0) == '/') {
+                $res += ";DIV" + type + "_" + new_split[ind-1] + "_" + new_split[ind+1] + "_\$T" + $pgm_body::var_num++ + "\n";
+            }
+            new_split[ind-1] = "\$T" + ($pgm_body::var_num - 1);
+
+            for (int j = ind; j < i-2; j++) {
+                new_split[j] = new_split[j+2];
+            }
+        }
+
+        if (!follows) {
+            new_split[0] = "\$T" + ($pgm_body::var_num - 1);
+            for (int j = 1; j < i-2; j++) {
+                new_split[j] = new_split[j+2];
+            }
+        }
+
+        for (int j = i-2; j <= i; j++) {
+            new_split[j] = null;
+        }
+
+        i -= 2;
+    }
+    //$res = $res.substring(0, $res.length() - 1);
 } | ID=id {
     $res = $ID.text;
 } | in=INTLITERAL {
