@@ -16,22 +16,38 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
 pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
+    ArrayList<String> vars = new ArrayList<String>();
+    for (String var : $DECL.res) {
+        String[] split = var.split(" ");
+        vars.add(split[1]);
+    }
+
     String out = $FUNC.res.replace("\n\n", "\n");
     System.out.println(";IR code");
     System.out.println(out);
     System.out.println(";tiny code");
     
+    for (String var : vars) {
+        System.out.println("var " + var);
+    }
+
+    Boolean last = false;
     String[] split = out.split("\n");
     int i = 0;
     for (String line : split) {
         String[] line_split = line.split(" ");
         if (line_split[0].equals(";STOREI")) {
+            if (last) {
+                i--;
+            }
+            last = false;
             if (line_split[2].startsWith("\$T")) {
                 System.out.println("move " + line_split[1] + " r" + i);
             } else {
                 System.out.println("move r" + i++ + " " + line_split[2]);
             }
         } else if (line_split[0].equals(";MULTI")) {
+            last = true;
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (i-1) + " r" + i);
             } else {
@@ -39,6 +55,7 @@ pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
             }
             System.out.println("muli " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";ADDI")) {
+            last = true;
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (i-1) + " r" + i);
             } else {
@@ -46,6 +63,7 @@ pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
             }
             System.out.println("addi " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";SUBI")) {
+            last = true;
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (i-1) + " r" + i);
             } else {
@@ -53,6 +71,7 @@ pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
             }
             System.out.println("subi " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";DIVI")) {
+            last = true;
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (i-1) + " r" + i);
             } else {
@@ -60,8 +79,10 @@ pgm_body locals [int var_num = 1] : DECL=decl FUNC=func_declarations {
             }
             System.out.println("divi " + line_split[2] + " r" + i++);
         } else if (line_split[0].equals(";WRITEI")) {
+            last = false;
             System.out.println("sys writei " + line_split[1]);
         } else if (line_split[0].equals(";READI")) {
+            last = false;
             System.out.println("sys readi " + line_split[1]);
         }
     }
