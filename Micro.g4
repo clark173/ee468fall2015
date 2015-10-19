@@ -93,10 +93,13 @@ decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=st
     $res.add($string_type.res);
     for (String var : $string_DECL.res) {
         $res.add(var);
+        $pgm_body::glob_vars.add("S " + var);
     }
 } | var_name=var_decl var_DECL=decl {
     for (String var : $var_name.res) {
         $res.add(var);
+        String[] split = var.split(" ");
+        $pgm_body::glob_vars.add(split[3].charAt(0) + " " + split[1]);
     }
     for (String var : $var_DECL.res) {
         $res.add(var);
@@ -173,13 +176,20 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
     String[] split = $EXPR.res.split(" ");
     int i = 0;
     String[] new_split = new String[split.length];
+    String type = "I";
+
+    if ($pgm_body::glob_vars.contains("I " + $ID.text)) {
+        type = "I";
+    } else {
+        type = "F";
+    }
 
     for (String var : split) {
         if (!var.equals("null") && !var.equals("(") && !var.equals(")")) {
             new_split[i++] = var;
         }
     }
-    
+
     if (i <= 2) {
         $res += ";STORE" + new_split[1] + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
         $res += ";STORE" + new_split[1] + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
@@ -189,13 +199,13 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             
 
             if (op == '*') {
-                $res += ";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
+                $res += ";MULT" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '/') {
-                $res += ";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
+                $res += ";DIV" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '+') {
-                $res += ";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
+                $res += ";ADD" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             } else if (op == '-') {
-                $res += ";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
+                $res += ";SUB" + type + " " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num++ + "\n";
             }
 
             new_split[0] = "\$T" + ($pgm_body::var_num - 1);
@@ -212,12 +222,21 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        $res += ";READI " + var + "\n";
+        String input = "I " + var;
+        if ($pgm_body::glob_vars.contains(input)) {
+            $res += ";READI " + var + "\n";
+        } else {
+            $res += ";READF " + var + "\n";
+        }
     }
 };
 write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        $res += ";WRITEI " + var + "\n";
+        if ($pgm_body::glob_vars.contains("I " + var)) {
+            $res += ";WRITEI " + var + "\n";
+        } else {
+            $res += ";WRITEF " + var + "\n";
+        }
     }
 };
 return_stmt : 'RETURN' expr ';';
