@@ -106,7 +106,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("subi " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("subi " + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("subi " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";SUBF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -114,7 +119,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("subr " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("subr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("subr " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";DIVI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -122,7 +132,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("divi " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("divi r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("divi " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";DIVF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
@@ -130,7 +145,12 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
-            System.out.println("divr " + line_split[2] + " r" + i++);
+
+            if (line_split[2].startsWith("\$T")) {
+                System.out.println("divr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+            } else {
+                System.out.println("divr " + line_split[2] + " r" + i++);
+            }
         } else if (line_split[0].equals(";WRITEI")) {
             last = false;
             System.out.println("sys writei " + line_split[1]);
