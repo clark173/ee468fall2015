@@ -34,7 +34,7 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
 
     Boolean last = false;
     String[] split = out.split("\n");
-    int i = 0;
+    int i = 1;
     for (String line : split) {
         String[] line_split = line.split(" ");
         if (line_split[0].startsWith(";STORE")) {
@@ -43,7 +43,7 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
             }
             last = false;
             if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[2].substring(2))));
             } else if (line_split[2].startsWith("\$T")) {
                 System.out.println("move " + line_split[1] + " r" + i);
             } else {
@@ -52,104 +52,104 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
         } else if (line_split[0].equals(";MULTI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("muli r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("muli r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("muli " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";MULTF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("mulr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("mulr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("mulr " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";ADDI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("addi r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("addi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("addi " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";ADDF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("addr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("addr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("addr " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";SUBI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("subi " + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("subi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("subi " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";SUBF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("subr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("subr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("subr " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";DIVI")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("divi r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("divi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("divi " + line_split[2] + " r" + i++);
             }
         } else if (line_split[0].equals(";DIVF")) {
             last = true;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (i-1) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
             } else {
                 System.out.println("move " + line_split[1] + " r" + i);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("divr r" + (Integer.parseInt(line_split[2].substring(2)) - 1) + " r" + i++);
+                System.out.println("divr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
             } else {
                 System.out.println("divr " + line_split[2] + " r" + i++);
             }
@@ -294,11 +294,13 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
             Boolean follows = false;
             int ind = 0;
             
-            for (int j = 2; j < i-2; j++) {
-                if (new_split[j].charAt(0) == '*' || new_split[j].charAt(0) == '/') {
-                    follows = true;
-                    ind = j;
-                    break;
+            if (op != '*' && op != '/') {
+                for (int j = 2; j < i; j++) {
+                    if (new_split[j].charAt(0) == '*' || new_split[j].charAt(0) == '/') {
+                        follows = true;
+                        ind = j;
+                        break;
+                    }
                 }
             }
 
@@ -454,9 +456,9 @@ primary returns [String res] : '(' EXP=expr ')' {
 } | ID=id {
     $res = $ID.text;
 } | in=INTLITERAL {
-    $res = $in.text + " I";
+    $res = $in.text;
 } | flo=FLOATLITERAL {
-    $res = $flo.text + " F";
+    $res = $flo.text;
 } ;
 addop : '+' | '-';
 mulop : '*' | '/';
