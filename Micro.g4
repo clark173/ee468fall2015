@@ -410,7 +410,7 @@ primary returns [String res] : '(' EXP=expr ')' {
         Boolean follows = false;
         int ind = 0;
 
-        for (int j = 2; j < i-2; j++) {
+        for (int j = 2; j < i; j++) {
             if (new_split[j].charAt(0) == '*' || new_split[j].charAt(0) == '/') {
                 follows = true;
                 ind = j;
