@@ -15,7 +15,7 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
+pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
     ArrayList<String> vars = new ArrayList<String>();
     for (String var : $DECL.res) {
         String[] split = var.split(" ");
@@ -165,6 +165,21 @@ pgm_body locals [int var_num = 1, ArrayList<String> glob_vars = new ArrayList<St
         } else if (line_split[0].equals(";READF")) {
             last = false;
             System.out.println("sys readr " + line_split[1]);
+        } else if (line_split[0].equals(";LABEL")) {
+            last = false;
+            System.out.println("label " + line_split[1]);
+        } else if (line_split[0].equals(";JUMP")) {
+            last = false;
+            System.out.println("jmp " + line_split[1]);
+        } else if (line_split[0].equals(";EQ")) {
+            last = false;
+            if (line_split[1].startsWith("\$T")) {
+                System.out.println("cmpi r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+            } else {
+                System.out.println("cmpi " + line_split[1] + " r" + i);
+            }
+
+            System.out.println("jeq " + line_split[3]);
         }
     }
     System.out.println("sys halt");
@@ -238,7 +253,9 @@ stmt_list returns [String res = ""] : STMT=stmt STMT_LIST=stmt_list {
 } | ;
 stmt returns [String res = ""] : BASE=base_stmt {
     $res = $BASE.res;
-} | if_stmt | for_stmt;
+} | if_stmt | FOR=for_stmt {
+    $res = $FOR.res;
+} ;
 base_stmt returns [String res = ""] : ASSIGN=assign_stmt {
     $res = $ASSIGN.res;
 } | READ=read_stmt {
@@ -467,10 +484,52 @@ mulop : '*' | '/';
 /* Complex Statements and Condition */
 if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list ELSE=else_part 'FI';
 else_part returns [ArrayList<String> res = new ArrayList<String>();] : 'ELSE' DECL=decl stmt_list | ;
-cond : expr compop expr;
+cond returns [String res = ""] : EXPR=expr OP=compop EXPR2=expr {
+    $res = $EXPR.res + " " + $OP.text + " " + $EXPR2.res;
+} ;
 compop : '<' | '>' | '=' | '!=' | '<=' | '>=';
 
-init_stmt : assign_expr | ;
-incr_stmt : assign_expr | ;
+init_stmt returns [String res = ""] : ASSIGN=assign_expr {
+    $res = $ASSIGN.res;
+} | ;
+incr_stmt returns [String res = ""] : ASSIGN_EXPR=assign_expr {
+    $res = $ASSIGN_EXPR.res;
+} | ;
 
-for_stmt returns [ArrayList<String> res = new ArrayList<String>();]: 'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' DECL=decl stmt_list 'ROF';
+for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' INCR=incr_stmt ')' DECL=decl STMT=stmt_list 'ROF' {
+    $res = $INIT.res;
+    $res += ";LABEL label" + $pgm_body::label_num + "\n";
+
+    String[] cond_split = $COND.res.split(" ");
+    String[] new_cond_split = new String[cond_split.length];
+    int j = 0;
+    for (int i = 0; i < cond_split.length; i++) {
+        String var = cond_split[i];
+        if (var != null && !var.equals("null")) {
+            new_cond_split[j++] = var;
+        }
+    }
+
+    $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    if (new_cond_split[1].equals("!=")) {
+        $res += ";EQ " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    } else if (new_cond_split[1].equals("=")) {
+        $res += ";NE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    } else if (new_cond_split[1].equals("<=")) {
+        $res += ";GT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    } else if (new_cond_split[1].equals(">=")) {
+        $res += ";LT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    } else if (new_cond_split[1].equals("<")) {
+        $res += ";GE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    } else if (new_cond_split[1].equals(">")) {
+        $res += ";LE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
+    }
+
+    $res += $STMT.res;
+    $res += ";LABEL label " + ($pgm_body::label_num + 1) + "\n";
+    $res += $INCR.res;
+    $res += ";JUMP label" + $pgm_body::label_num + "\n";
+    $res += ";LABEL label" + ($pgm_body::label_num + 2) + "\n";
+
+    $pgm_body::label_num += 2;
+} ;
