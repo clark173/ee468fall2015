@@ -1,4 +1,9 @@
 grammar Micro;
+
+@header{
+    import java.util.Arrays;
+}
+
 COMMENT : '--' ~[\n]* -> skip ;
 KEYWORD : 'PROGRAM' | 'BEGIN' | 'END' | 'FUNCTION' | 'READ' | 'WRITE' | 'IF' | 'ELSE' | 'FI' | 'FOR' | 'ROF' | 'CONTINUE' | 'BREAK' | 'RETURN' | 'INT' | 'VOID' | 'STRING' | 'FLOAT';
 IDENTIFIER : [a-zA-Z][a-zA-Z0-9]*;
@@ -431,6 +436,8 @@ mulop : '*' | '/';
 
 /* Complex Statements and Condition */
 if_stmt returns [String res = ""] : 'IF' '(' COND=cond ')' DECL=decl STMT=stmt_list ELSE=else_part 'FI' {
+    String[] ops = {"!=", "=", "<=", ">=", "<", ">"};
+    String[] instructions = {";EQ", ";NE", ";GT", ";LT", ";GE", ";LE"};
     String[] cond_split = $COND.res.split(" ");
     String[] new_cond_split = new String[cond_split.length];
     int j = 0;
@@ -442,20 +449,7 @@ if_stmt returns [String res = ""] : 'IF' '(' COND=cond ')' DECL=decl STMT=stmt_l
     }
 
     $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
-    if (new_cond_split[1].equals("!=")) {
-        $res += ";EQ " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    } else if (new_cond_split[1].equals("=")) {
-        $res += ";NE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    } else if (new_cond_split[1].equals("<=")) {
-        $res += ";GT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    } else if (new_cond_split[1].equals(">=")) {
-        $res += ";LT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    } else if (new_cond_split[1].equals("<")) {
-        $res += ";GE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    } else if (new_cond_split[1].equals(">")) {
-        $res += ";LE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
-    }
-
+    $res += instructions[Arrays.asList(ops).indexOf(new_cond_split[1])]+ " " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
     $res += $STMT.res;
     $res += ";JUMP label" + ($pgm_body::label_num + 1) + "\n";
     $res += ";LABEL label" + $pgm_body::label_num + "\n";
@@ -481,6 +475,9 @@ incr_stmt returns [String res = ""] : ASSIGN_EXPR=assign_expr {
 } | ;
 
 for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' INCR=incr_stmt ')' DECL=decl STMT=stmt_list 'ROF' {
+    String[] ops = {"!=", "=", "<=", ">=", "<", ">"};
+    String[] instructions = {";EQ", ";NE", ";GT", ";LT", ";GE", ";LE"};
+
     $res = $INIT.res;
     $res += ";LABEL label" + $pgm_body::label_num + "\n";
 
@@ -495,20 +492,7 @@ for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' I
     }
 
     $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
-    if (new_cond_split[1].equals("!=")) {
-        $res += ";EQ " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    } else if (new_cond_split[1].equals("=")) {
-        $res += ";NE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    } else if (new_cond_split[1].equals("<=")) {
-        $res += ";GT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    } else if (new_cond_split[1].equals(">=")) {
-        $res += ";LT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    } else if (new_cond_split[1].equals("<")) {
-        $res += ";GE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    } else if (new_cond_split[1].equals(">")) {
-        $res += ";LE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
-    }
-
+    $res += instructions[Arrays.asList(ops).indexOf(new_cond_split[1])] + " " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num + 2) + "\n";
     $res += $STMT.res;
     $res += ";LABEL label" + ($pgm_body::label_num + 1) + "\n";
     $res += $INCR.res;
