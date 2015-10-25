@@ -327,7 +327,7 @@ write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
         if ($pgm_body::glob_vars.contains("I " + var)) {
             $res += ";WRITEI " + var + "\n";
-        } else if ($pgm_body::glob_var.constains("F " + var)) {
+        } else if ($pgm_body::glob_vars.contains("F " + var)) {
             $res += ";WRITEF " + var + "\n";
         } else {
             $res += ";WRITES " + var + "\n";
@@ -496,7 +496,7 @@ for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' I
 
     String[] cond_split = $COND.res.split(" ");
     String[] new_cond_split = new String[cond_split.length];
-    int j = 0;
+    int j = 0, x = 0;
 
     for (String line : cond_split) {
         if (line.contains("_")) {
