@@ -102,10 +102,14 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("sys writei " + line_split[1]);
         } else if (line_split[0].equals(";WRITEF")) {
             System.out.println("sys writer " + line_split[1]);
+        } else if (line_split[0].equals(";WRITES")) {
+            System.out.println("sys writes " + line_split[1]);
         } else if (line_split[0].equals(";READI")) {
             System.out.println("sys readi " + line_split[1]);
         } else if (line_split[0].equals(";READF")) {
             System.out.println("sys readr " + line_split[1]);
+        } else if (line_split[0].equals(";READS")) {
+            System.out.println("sys reads " + line_split[1]);
         } else if (line_split[0].equals(";LABEL")) {
             System.out.println("label " + line_split[1]);
         } else if (line_split[0].equals(";JUMP")) {
@@ -172,7 +176,7 @@ any_type : var_type | 'VOID';
 id_list returns [ArrayList<String> res = new ArrayList<String>();] : ID=id TAIL=id_tail {
     $res.add($ID.text);
     String[] list = $TAIL.text.split(",");
-    for (int i = 0; i < list.length - 1; i++)
+    for (int i = 0; i < list.length; i++)
     {
         $res.add(list[i]);
     }
@@ -314,23 +318,27 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        if ($pgm_body::glob_vars.contains("I " + var)) {
-            $res += ";READI " + var + "\n";
-        } else if ($pgm_body::glob_vars.contains("F " + var)) {
-            $res += ";READF " + var + "\n";
-        } else {
-            $res += ";READS " + var + "\n";
+        if (!var.equals("")) {
+            if ($pgm_body::glob_vars.contains("I " + var)) {
+                $res += ";READI " + var + "\n";
+            } else if ($pgm_body::glob_vars.contains("F " + var)) {
+                $res += ";READF " + var + "\n";
+            } else {
+                $res += ";READS " + var + "\n";
+            }
         }
     }
 };
 write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        if ($pgm_body::glob_vars.contains("I " + var)) {
-            $res += ";WRITEI " + var + "\n";
-        } else if ($pgm_body::glob_vars.contains("F " + var)) {
-            $res += ";WRITEF " + var + "\n";
-        } else {
-            $res += ";WRITES " + var + "\n";
+        if (!var.equals("")) {
+            if ($pgm_body::glob_vars.contains("I " + var)) {
+                $res += ";WRITEI " + var + "\n";
+            } else if ($pgm_body::glob_vars.contains("F " + var)) {
+                $res += ";WRITEF " + var + "\n";
+            } else {
+                $res += ";WRITES " + var + "\n";
+            }
         }
     }
 };
