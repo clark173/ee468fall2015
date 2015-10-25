@@ -162,14 +162,27 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("label " + line_split[1]);
         } else if (line_split[0].equals(";JUMP")) {
             System.out.println("jmp " + line_split[1]);
-        } else if (line_split[0].equals(";EQ")) {
+        } else if (line_split[0].equals(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") ||
+                   line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("cmpi r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[1].substring(2))));
             } else {
                 System.out.println("cmpi " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             }
 
-            System.out.println("jeq " + line_split[3]);
+            if (line_split[0].equals(";EQ")) {
+                System.out.println("jeq " + line_split[3]);
+            } else if (line_split[0].equals(";LT")) {
+                System.out.println("jlt " + line_split[3]);
+            } else if (line_split[0].equals(";NE")) {
+                System.out.println("jne " + line_split[3]);
+            } else if (line_split[0].equals(";GT")) {
+                System.out.println("jgt " + line_split[3]);
+            } else if (line_split[0].equals(";GE")) {
+                System.out.println("jge " + line_split[3]);
+            } else if (line_split[0].equals(";LE")) {
+                System.out.println("jle " + line_split[3]);
+            }
         }
     }
     System.out.println("sys halt");
