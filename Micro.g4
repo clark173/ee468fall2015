@@ -253,7 +253,9 @@ stmt_list returns [String res = ""] : STMT=stmt STMT_LIST=stmt_list {
 } | ;
 stmt returns [String res = ""] : BASE=base_stmt {
     $res = $BASE.res;
-} | if_stmt | FOR=for_stmt {
+} | IF=if_stmt {
+    $res = $IF.res;
+} | FOR=for_stmt {
     $res = $FOR.res;
 } ;
 base_stmt returns [String res = ""] : ASSIGN=assign_stmt {
@@ -482,8 +484,44 @@ mulop : '*' | '/';
 
 
 /* Complex Statements and Condition */
-if_stmt returns [ArrayList<String> res = new ArrayList<String>();] : 'IF' '(' cond ')' DECL=decl stmt_list ELSE=else_part 'FI';
-else_part returns [ArrayList<String> res = new ArrayList<String>();] : 'ELSE' DECL=decl stmt_list | ;
+if_stmt returns [String res = ""] : 'IF' '(' COND=cond ')' DECL=decl STMT=stmt_list ELSE=else_part 'FI' {
+    String[] cond_split = $COND.res.split(" ");
+    String[] new_cond_split = new String[cond_split.length];
+    int j = 0;
+    for (int i = 0; i < cond_split.length; i++) {
+        String var = cond_split[i];
+        if (var != null && !var.equals("null")) {
+            new_cond_split[j++] = var;
+        }
+    }
+
+    $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    if (new_cond_split[1].equals("!=")) {
+        $res += ";EQ " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    } else if (new_cond_split[1].equals("=")) {
+        $res += ";NE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    } else if (new_cond_split[1].equals("<=")) {
+        $res += ";GT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    } else if (new_cond_split[1].equals(">=")) {
+        $res += ";LT " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    } else if (new_cond_split[1].equals("<")) {
+        $res += ";GE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    } else if (new_cond_split[1].equals(">")) {
+        $res += ";LE " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
+    }
+
+    $res += $STMT.res;
+    $res += ";JUMP label" + ($pgm_body::label_num + 1) + "\n";
+    $res += ";LABEL label" + $pgm_body::label_num + "\n";
+    $res += $ELSE.res;
+    $res += ";JUMP label" + ($pgm_body::label_num + 1) + "\n";
+    $res += ";LABEL label" + ($pgm_body::label_num + 1) + "\n";
+
+    $pgm_body::label_num += 2;
+} ;
+else_part returns [String res = ""] : 'ELSE' DECL=decl STMT=stmt_list {
+    $res = $STMT.res;
+} | ;
 cond returns [String res = ""] : EXPR=expr OP=compop EXPR2=expr {
     $res = $EXPR.res + " " + $OP.text + " " + $EXPR2.res;
 } ;
