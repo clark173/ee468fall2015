@@ -17,6 +17,7 @@ program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
 pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
     ArrayList<String> vars = new ArrayList<String>();
+
     for (String var : $DECL.res) {
         String[] split = var.split(" ");
         vars.add(split[1]);
@@ -24,6 +25,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     }
 
     String out = $FUNC.res.replace("\n\n", "\n");
+
     System.out.println(";IR code");
     System.out.println(out);
     System.out.println(";tiny code");
@@ -32,151 +34,139 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         System.out.println("var " + var);
     }
 
-    Boolean last = false;
     String[] split = out.split("\n");
-    int i = 1;
+
     for (String line : split) {
         String[] line_split = line.split(" ");
         if (line_split[0].startsWith(";STORE")) {
-            if (last) {
-                i--;
-            }
-            last = false;
             if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
                 System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[2].substring(2))));
             } else if (line_split[2].startsWith("\$T")) {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             } else {
-                System.out.println("move r" + i++ + " " + line_split[2]);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " " + line_split[2]);
             }
         } else if (line_split[0].equals(";MULTI")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("muli r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("muli r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("muli " + line_split[2] + " r" + i++);
+                System.out.println("muli " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";MULTF")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("mulr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("mulr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("mulr " + line_split[2] + " r" + i++);
+                System.out.println("mulr " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";ADDI")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("addi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("addi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("addi " + line_split[2] + " r" + i++);
+                System.out.println("addi " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";ADDF")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("addr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("addr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("addr " + line_split[2] + " r" + i++);
+                System.out.println("addr " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";SUBI")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("subi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("subi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("subi " + line_split[2] + " r" + i++);
+                System.out.println("subi " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";SUBF")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("subr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("subr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("subr " + line_split[2] + " r" + i++);
+                System.out.println("subr " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";DIVI")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("divi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("divi r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("divi " + line_split[2] + " r" + i++);
+                System.out.println("divi " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";DIVF")) {
-            last = true;
+            int final_reg = Integer.parseInt(line_split[3].substring(2));
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("move " + line_split[1] + " r" + i);
+                System.out.println("move " + line_split[1] + " r" + final_reg);
             }
 
             if (line_split[2].startsWith("\$T")) {
-                System.out.println("divr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + i++);
+                System.out.println("divr r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
             } else {
-                System.out.println("divr " + line_split[2] + " r" + i++);
+                System.out.println("divr " + line_split[2] + " r" + final_reg);
             }
         } else if (line_split[0].equals(";WRITEI")) {
-            last = false;
             System.out.println("sys writei " + line_split[1]);
         } else if (line_split[0].equals(";WRITEF")) {
-            last = false;
             System.out.println("sys writer " + line_split[1]);
         } else if (line_split[0].equals(";READI")) {
-            last = false;
             System.out.println("sys readi " + line_split[1]);
         } else if (line_split[0].equals(";READF")) {
-            last = false;
             System.out.println("sys readr " + line_split[1]);
         } else if (line_split[0].equals(";LABEL")) {
-            last = false;
             System.out.println("label " + line_split[1]);
         } else if (line_split[0].equals(";JUMP")) {
-            last = false;
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].equals(";EQ")) {
-            last = false;
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("cmpi r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + i);
+                System.out.println("cmpi r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[1].substring(2))));
             } else {
-                System.out.println("cmpi " + line_split[1] + " r" + i);
+                System.out.println("cmpi " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             }
 
             System.out.println("jeq " + line_split[3]);
@@ -564,7 +554,7 @@ for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' I
     }
 
     $res += $STMT.res;
-    $res += ";LABEL label " + ($pgm_body::label_num + 1) + "\n";
+    $res += ";LABEL label" + ($pgm_body::label_num + 1) + "\n";
     $res += $INCR.res;
     $res += ";JUMP label" + $pgm_body::label_num + "\n";
     $res += ";LABEL label" + ($pgm_body::label_num + 2) + "\n";
