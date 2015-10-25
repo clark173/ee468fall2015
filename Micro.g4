@@ -314,11 +314,12 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
 } ;
 read_stmt returns [String res = ""] : 'READ' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
-        String input = "I " + var;
-        if ($pgm_body::glob_vars.contains(input)) {
+        if ($pgm_body::glob_vars.contains("I " + var)) {
             $res += ";READI " + var + "\n";
-        } else {
+        } else if ($pgm_body::glob_vars.contains("F " + var)) {
             $res += ";READF " + var + "\n";
+        } else {
+            $res += ";READS " + var + "\n";
         }
     }
 };
@@ -326,8 +327,10 @@ write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
     for (String var : $ID_LIST.res) {
         if ($pgm_body::glob_vars.contains("I " + var)) {
             $res += ";WRITEI " + var + "\n";
-        } else {
+        } else if ($pgm_body::glob_var.constains("F " + var)) {
             $res += ";WRITEF " + var + "\n";
+        } else {
+            $res += ";WRITES " + var + "\n";
         }
     }
 };
@@ -422,7 +425,6 @@ primary returns [String res] : '(' EXP=expr ')' {
 
         i -= 2;
     }
-    //$res = $res.substring(0, $res.length() - 1);
 } | ID=id {
     $res = $ID.text;
 } | in=INTLITERAL {
@@ -440,7 +442,18 @@ if_stmt returns [String res = ""] : 'IF' '(' COND=cond ')' DECL=decl STMT=stmt_l
     String[] instructions = {";EQ", ";NE", ";GT", ";LT", ";GE", ";LE"};
     String[] cond_split = $COND.res.split(" ");
     String[] new_cond_split = new String[cond_split.length];
-    int j = 0;
+    int j = 0, x = 0;
+
+    for (String line : cond_split) {
+        if (line.contains("_")) {
+            line = line.substring(0, line.length() - 1);
+            String[] split = line.split("_");
+            cond_split[x] = split[split.length - 1];
+            $res += line.replace("_", " ") + "\n";
+        }
+        x++;
+    }
+
     for (int i = 0; i < cond_split.length; i++) {
         String var = cond_split[i];
         if (var != null && !var.equals("null")) {
@@ -484,6 +497,17 @@ for_stmt returns [String res = ""]: 'FOR' '(' INIT=init_stmt ';' COND=cond ';' I
     String[] cond_split = $COND.res.split(" ");
     String[] new_cond_split = new String[cond_split.length];
     int j = 0;
+
+    for (String line : cond_split) {
+        if (line.contains("_")) {
+            line = line.substring(0, line.length() - 1);
+            String[] split = line.split("_");
+            cond_split[x] = split[split.length - 1];
+            $res += line.replace("_", " ") + "\n";
+        }
+        x++;
+    }
+
     for (int i = 0; i < cond_split.length; i++) {
         String var = cond_split[i];
         if (var != null && !var.equals("null")) {
