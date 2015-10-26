@@ -116,10 +116,16 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].equals(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") ||
                    line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
+            char type = 'r';
+
+            if ($glob_vars.contains("I " + line_split[1])) {
+                type = 'i';
+            }
+
             if (line_split[1].startsWith("\$T")) {
-                System.out.println("cmpi r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[1].substring(2))));
+                System.out.println("cmp" + type + " r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[1].substring(2))));
             } else {
-                System.out.println("cmpi " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
+                System.out.println("cmp" + type + " " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             }
 
             if (line_split[0].equals(";EQ")) {
@@ -312,7 +318,6 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
 
             i -= 2;
         }
-
         $res += ";STORE" + type + " \$T" + ($pgm_body::var_num-1) + " " + $ID.text + "\n";
     }
 } ;
