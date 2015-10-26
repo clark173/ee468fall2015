@@ -25,8 +25,14 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
     for (String var : $DECL.res) {
         String[] split = var.split(" ");
-        vars.add(split[1]);
-        $glob_vars.add(split[3].charAt(0) + " " + split[1]);
+        if (split[3].charAt(0) == 'S') {
+            String var_string = "S " + split[1] + " ";
+            var_string += var.substring(var.indexOf("\""));
+            vars.add("str " + split[1] + " " + var.substring(var.indexOf("\"")));
+        } else {
+            $glob_vars.add(split[3].charAt(0) + " " + split[1]);
+            vars.add("var " + split[1]);
+        }
     }
 
     String out = $FUNC.res.replace("\n\n", "\n");
@@ -36,7 +42,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     System.out.println(";tiny code");
     
     for (String var : vars) {
-        System.out.println("var " + var);
+        System.out.println(var);
     }
 
     String[] split = out.split("\n");
