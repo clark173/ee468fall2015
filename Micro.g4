@@ -38,16 +38,42 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     String out = $FUNC.res.replace("\n\n", "\n");
 
     System.out.println(";IR code");
-    System.out.println(out);
-    System.out.println(";tiny code");
     
+    String[] split = out.split("\n");
+    String optimized_out = "";
+
+    for (int i = 0; i < split.length; i++) {
+        String line = split[i];
+        Boolean changed = false;
+
+        if (line.startsWith(";JUMP ")) {
+            if (i + 1 < split.length) {
+                if (split[i+1].startsWith(";LABEL ")) {
+                    String num = line.substring(11);
+
+                    if (num.equals(split[i+1].substring(12))) {
+                        changed = true;
+                        optimized_out += ";LABEL label" + num + "\n";
+                        i++;
+                    }
+                }
+            }
+        }
+
+        if (!changed) {
+            optimized_out += line + "\n";
+        }
+    }
+
+    System.out.println(optimized_out);
+    System.out.println(";tiny code");
     for (String var : vars) {
         System.out.println(var);
     }
 
-    String[] split = out.split("\n");
+    String[] new_split = optimized_out.split("\n");
 
-    for (String line : split) {
+    for (String line : new_split) {
         String[] line_split = line.split(" ");
 
         if (line_split[0].startsWith(";STORE")) {
