@@ -72,6 +72,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     for (String var : vars) {
         System.out.println(var);
     }
+    System.out.println("push\npush r0\npush r1\npush r2\npush r3\njsr main\nsys halt");
 
     String[] new_split = optimized_out.split("\n");
 
@@ -103,6 +104,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
+            } else if (line_split[1].startsWith("\$P")) {
+                System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 6) + " r" + final_reg);
             } else {
                 System.out.println("move " + line_split[1] + " r" + final_reg);
             }
@@ -110,24 +113,32 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             if (line_split[0].startsWith(";MULT")) {
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("mul" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
+                } else if (line_split[2].startsWith("\$P")) {
+                    System.out.println("mul" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
                 } else {
                     System.out.println("mul" + type + " " + line_split[2] + " r" + final_reg);
                 }
             } else if (line_split[0].startsWith(";ADD")) {
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("add" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
+                } else if (line_split[2].startsWith("\$P")) {
+                    System.out.println("add" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
                 } else {
                     System.out.println("add" + type + " " + line_split[2] + " r" + final_reg);
                 }
             } else if (line_split[0].startsWith(";SUB")) {
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("sub" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
+                } else if (line_split[2].startsWith("\$P")) {
+                    System.out.println("sub" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
                 } else {
                     System.out.println("sub" + type + " " + line_split[2] + " r" + final_reg);
                 }
             } else if (line_split[0].startsWith(";DIV")) {
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("div" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
+                } else if (line_split[2].startsWith("\$P")) {
+                    System.out.println("div" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
                 } else {
                     System.out.println("div" + type + " " + line_split[2] + " r" + final_reg);
                 }
@@ -148,6 +159,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("label " + line_split[1]);
         } else if (line_split[0].equals(";JUMP")) {
             System.out.println("jmp " + line_split[1]);
+        } else if (line_split[0].equals(";RET")) {
+            System.out.println("unlnk\nret");
         } else if (line_split[0].equals(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") ||
                    line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
             char type = 'r';
