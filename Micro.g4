@@ -270,22 +270,34 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
     }
 
     func = func.substring(0, func.length() - 1) + last_line;
+    int num = 0;
 
     for (String line : func_split) {
         String[] line_split = line.split(" ");
         int i = 0;
+
+        if (line.startsWith(";POP") && num < func_split.length) {
+            if (func_split[num + 1].startsWith(";STORE")) {
+                String[] parts = func_split[num + 1].split(" ");
+                func = func.replace(line + "\n" + func_split[num + 1], ";POP\n;POP " + parts[1] + "\n" + func_split[num + 1]);
+            }
+        }
+
         for (String var : line_split) {
             if (var.matches("^[a-zA-Z][a-zA-Z0-9]*")) {
                 if (line_split[0].startsWith(";STORE") && line_split[1].equals(var)) {
                     locals.add(var);
                 } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITES")) {
-                    func = func.replace(" " + var, " \$L" + local_vars++ + " ");
+                    func = func.replace(" " + var + " ", " \$L" + local_vars + " ");
+                    func = func.replace(" " + var + "\n", " \$L" + local_vars++ + "\n");
                 }
+            } else if (var.matches("^_[a-zA-Z][a-zA-Z0-9]*")) {
+                System.out.println(var);
+                func = func.replace(var, var.substring(1, var.length()));
             }
         }
+        num++;
     }
-
-    System.out.println(locals);
 
     $res = ";LABEL " + $ID.text + "\n;LINK\n";
     $res += func.replace("  ", " ");
@@ -350,6 +362,23 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
                 var = var.substring(var.lastIndexOf("_") + 1);
             }
             new_split[i++] = var;
+        }
+    }
+
+    if (new_split[0].equals("CALL")) {
+        int num = 0;
+
+        $res += ";PUSH\n";
+        for (int j = 2; j < i; j++) {
+            if (!new_split[j].equals("null")) {
+                num++;
+                $res += ";PUSH " + new_split[j] + " \n";
+            }
+        }
+        $res += ";JSR _" + new_split[1] + "\n";
+        $res += ";POP\n";
+        for (int j = 0; j < num - 1; j++) {
+            $res += ";POP\n";
         }
     }
 
@@ -453,10 +482,18 @@ factor_prefix returns [String res] : factor_prefix POST=postfix_expr OP=mulop {
 } | ;
 postfix_expr returns [String res] : PRIMARY=primary {
     $res = $PRIMARY.res;
-} | call_expr;
-call_expr : id '(' expr_list ')';
-expr_list : expr expr_list_tail | ;
-expr_list_tail : ',' expr expr_list_tail | ;
+} | CALL=call_expr {
+    $res = "CALL " + $CALL.res;
+};
+call_expr returns [String res] : ID=id '(' EXPR=expr_list ')' {
+    $res = $ID.text + " " + $EXPR.res;
+};
+expr_list returns [String res] : EXP=expr EXP_TAIL=expr_list_tail {
+    $res = $EXP.res + " " + $EXP_TAIL.res;
+} | ;
+expr_list_tail returns [String res] : ',' EXP=expr EXP_TAIL=expr_list_tail {
+    $res = $EXP.res + " " + $EXP_TAIL.res;
+} | ;
 primary returns [String res] : '(' EXP=expr ')' {
     $res = "( " + $EXP.res + " )";
 
