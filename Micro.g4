@@ -20,7 +20,7 @@ FLOATLITERAL : ('0'..'9')+.('0'..'9')+;
 /* Program */
 program : 'PROGRAM' id 'BEGIN' pgm_body 'END';
 id : IDENTIFIER;
-pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
+pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars = new ArrayList<String>();, ArrayList<String> true_globals = new ArrayList<String>();] : DECL=decl FUNC=func_declarations {
     ArrayList<String> vars = new ArrayList<String>();
 
     for (String var : $DECL.res) {
@@ -29,13 +29,15 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             String var_string = "S " + split[1] + " ";
             var_string += var.substring(var.indexOf("\""));
             vars.add("str " + split[1] + " " + var.substring(var.indexOf("\"")));
+            $true_globals.add("S " + var);
         } else {
             $glob_vars.add(split[3].charAt(0) + " " + split[1]);
+            $true_globals.add(split[3].charAt(0) + " " + split[1]);
             vars.add("var " + split[1]);
         }
     }
 
-    String out = $FUNC.res.replace("\n\n", "\n");
+    String out = $FUNC.res;
 
     System.out.println(";IR code");
     
@@ -194,6 +196,7 @@ decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=st
     }
 } | ;
 
+
 /* Global String Declaration */
 string_decl returns [String res] : 'STRING' ID=id ':=' VAL=str ';' {
     $res = "name " + $ID.text + " type STRING value " + $VAL.text;
@@ -223,17 +226,70 @@ id_tail : ',' id id_tail | ;
 
 
 /* Function Paramater List */
-param_decl_list : param_decl param_decl_tail | ;
-param_decl : var_type id ;
-param_decl_tail : ',' param_decl param_decl_tail | ;
+param_decl_list returns [String res] : DECL=param_decl TAIL=param_decl_tail {
+    $res = $DECL.res + " " + $TAIL.res;
+} | ;
+param_decl returns [String res] : var_type ID=id {
+    $res = $ID.text;
+} ;
+param_decl_tail returns [String res] : ',' PARAM=param_decl TAIL=param_decl_tail {
+    $res = $PARAM.res + " " + $TAIL.res;
+} | ;
 
 
 /* Function Declarations */
-func_declarations returns [String res = ""] : FUNC=func_decl func_declarations {
+func_declarations returns [String res = ""] : FUNC=func_decl PREV_FUNC=func_declarations {
     $res = $FUNC.res;
+    $res += $PREV_FUNC.res;
 } | ;
-func_decl returns [String res = ""] : 'FUNCTION' any_type id '('param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
-    $res = $FUNC.res;
+func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
+    String func = $FUNC.res.replace("\n\n", "\n");
+    ArrayList<String> locals = new ArrayList<String>();
+
+    if ($PARAMS.res != null) {
+        String[] params = $PARAMS.res.split(" ");
+        int i = 1;
+
+        for (String var : $PARAMS.res.split(" ")) {
+            if (!var.equals("null")) {
+                func = func.replace(" " + var + " ", " \$P" + i++ + " ");
+            }
+        }
+    }
+
+    String[] func_split = func.split("\n");
+    int local_vars = 1;
+    String last_line = func_split[func_split.length - 1];
+
+    if (!last_line.startsWith(";WRITE")) {
+        String[] parts = last_line.split(" ");
+        last_line = parts[0] + " " + parts[2] + " \$R\n";
+    } else {
+        last_line = ";STOREI 0 \$T" + $pgm_body::var_num;
+        last_line += "\n;STOREI \$T" + $pgm_body::var_num + " \$R\n";
+    }
+
+    func = func.substring(0, func.length() - 1) + last_line;
+
+    for (String line : func_split) {
+        String[] line_split = line.split(" ");
+        int i = 0;
+        for (String var : line_split) {
+            if (var.matches("^[a-zA-Z][a-zA-Z0-9]*")) {
+                if (line_split[0].startsWith(";STORE") && line_split[1].equals(var)) {
+                    locals.add(var);
+                } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITES")) {
+                    func = func.replace(" " + var, " \$L" + local_vars++ + " ");
+                }
+            }
+        }
+    }
+
+    System.out.println(locals);
+
+    $res = ";LABEL " + $ID.text + "\n;LINK\n";
+    $res += func.replace("  ", " ");
+    $res += ";RET\n\n";
 };
 func_body returns [String res = ""] : decl STMT=stmt_list {
     $res = $STMT.res;
