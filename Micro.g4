@@ -201,7 +201,15 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         } else if (line_split[0].equals(";JUMP")) {
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].equals(";JSR")) {
+            System.out.println("push r0");
+            System.out.println("push r1");
+            System.out.println("push r2");
+            System.out.println("push r3");
             System.out.println("jsr " + line_split[1]);
+            System.out.println("pop r3");
+            System.out.println("pop r2");
+            System.out.println("pop r1");
+            System.out.println("pop r0");
         } else if (line_split[0].equals(";RET")) {
             System.out.println("unlnk\nret");
         } else if (line_split[0].equals(";POP")) {
@@ -211,7 +219,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[1].startsWith("\$L")) {
                     System.out.println("pop \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
                 } else if (line_split[1].startsWith("\$T")) {
-                    System.out.println("pop \$" + (Integer.parseInt(line_split[1].substring(2))));
+                    System.out.println("pop r" + (Integer.parseInt(line_split[1].substring(2))));
                 } else {
                     System.out.println("pop " + line_split[1]);
                 }
@@ -223,7 +231,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[1].startsWith("\$L")) {
                     System.out.println("push \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
                 } else if (line_split[1].startsWith("\$T")) {
-                    System.out.println("push \$" + (Integer.parseInt(line_split[1].substring(2))));
+                    System.out.println("push r" + (Integer.parseInt(line_split[1].substring(2))));
                 } else {
                     System.out.println("push " + line_split[1]);
                 }
