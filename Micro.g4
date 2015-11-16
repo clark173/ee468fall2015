@@ -75,6 +75,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     System.out.println("push\npush r0\npush r1\npush r2\npush r3\njsr main\nsys halt");
 
     String[] new_split = optimized_out.split("\n");
+    String previous_line = "";
+    int local_var_num = 6;
 
     for (String line : new_split) {
         String[] line_split = line.split(" ");
@@ -82,6 +84,22 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         if (line_split[0].startsWith(";STORE")) {
             if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
                 System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[2].substring(2))));
+            } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$L")) {
+                int first_local = Integer.parseInt(line_split[1].substring(2)) * -1;
+                int second_local = Integer.parseInt(line_split[2].substring(2)) * -1;
+                System.out.println("move \$" + first_local + " \$" + second_local);
+            } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$L")) {
+                int second_local = Integer.parseInt(line_split[2].substring(2)) * -1;
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " \$" + second_local);
+            } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$T")) {
+                int first_local = Integer.parseInt(line_split[1].substring(2)) * -1;
+                System.out.println("move \$" + first_local + " r" + (Integer.parseInt(line_split[2].substring(2))));
+            } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$R")) {
+                int first_local = Integer.parseInt(line_split[1].substring(2)) * -1;
+                System.out.println("move \$" + first_local + " r1");
+                System.out.println("move r1 \$" + local_var_num);
+            } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$R")) {
+                System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " \$" + local_var_num);
             } else if (line_split[2].startsWith("\$T")) {
                 System.out.println("move " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             } else {
@@ -105,7 +123,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("move r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + final_reg);
             } else if (line_split[1].startsWith("\$P")) {
-                System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 6) + " r" + final_reg);
+                System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + final_reg);
+                local_var_num = Integer.parseInt(line_split[1].substring(2)) + 6;
             } else {
                 System.out.println("move " + line_split[1] + " r" + final_reg);
             }
@@ -114,7 +133,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("mul" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
                 } else if (line_split[2].startsWith("\$P")) {
-                    System.out.println("mul" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
+                    System.out.println("mul" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + final_reg);
+                    local_var_num = Integer.parseInt(line_split[2].substring(2)) + 6;
                 } else {
                     System.out.println("mul" + type + " " + line_split[2] + " r" + final_reg);
                 }
@@ -122,7 +142,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("add" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
                 } else if (line_split[2].startsWith("\$P")) {
-                    System.out.println("add" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
+                    System.out.println("add" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + final_reg);
+                    local_var_num = Integer.parseInt(line_split[2].substring(2)) + 6;
                 } else {
                     System.out.println("add" + type + " " + line_split[2] + " r" + final_reg);
                 }
@@ -130,7 +151,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("sub" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
                 } else if (line_split[2].startsWith("\$P")) {
-                    System.out.println("sub" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
+                    System.out.println("sub" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + final_reg);
+                    local_var_num = Integer.parseInt(line_split[2].substring(2)) + 6;
                 } else {
                     System.out.println("sub" + type + " " + line_split[2] + " r" + final_reg);
                 }
@@ -138,27 +160,48 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("div" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
                 } else if (line_split[2].startsWith("\$P")) {
-                    System.out.println("div" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 6) + " r" + final_reg);
+                    System.out.println("div" + type + " \$T" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + final_reg);
+                    local_var_num = Integer.parseInt(line_split[2].substring(2)) + 6;
                 } else {
                     System.out.println("div" + type + " " + line_split[2] + " r" + final_reg);
                 }
             }
         } else if (line_split[0].equals(";WRITEI")) {
-            System.out.println("sys writei " + line_split[1]);
+            if (line_split[1].startsWith("\$L")) {
+                System.out.println("sys writei \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+            } else {
+                System.out.println("sys writei " + line_split[1]);
+            }
         } else if (line_split[0].equals(";WRITEF")) {
-            System.out.println("sys writer " + line_split[1]);
+            if (line_split[1].startsWith("\$L")) {
+                System.out.println("sys writer \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+            } else {
+                System.out.println("sys writer " + line_split[1]);
+            }
         } else if (line_split[0].equals(";WRITES")) {
             System.out.println("sys writes " + line_split[1]);
         } else if (line_split[0].equals(";READI")) {
-            System.out.println("sys readi " + line_split[1]);
+            if (line_split[1].startsWith("\$L")) {
+                System.out.println("sys readi \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+            } else {
+                System.out.println("sys readi " + line_split[1]);
+            }
         } else if (line_split[0].equals(";READF")) {
-            System.out.println("sys readr " + line_split[1]);
+            if (line_split[1].startsWith("\$L")) {
+                System.out.println("sys readr \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+            } else {
+                System.out.println("sys readr " + line_split[1]);
+            }
         } else if (line_split[0].equals(";READS")) {
             System.out.println("sys reads " + line_split[1]);
         } else if (line_split[0].equals(";LABEL")) {
+            local_var_num = 6;
             System.out.println("label " + line_split[1]);
+            System.out.println("link " + line_split[2]);
         } else if (line_split[0].equals(";JUMP")) {
             System.out.println("jmp " + line_split[1]);
+        } else if (line_split[0].equals(";JSR")) {
+            System.out.println("jsr " + line_split[1]);
         } else if (line_split[0].equals(";RET")) {
             System.out.println("unlnk\nret");
         } else if (line_split[0].equals(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") ||
@@ -189,8 +232,9 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 System.out.println("jle " + line_split[3]);
             }
         }
+        previous_line = line;
     }
-    System.out.println("sys halt");
+    System.out.println("end");
 };
 decl returns [ArrayList<String> res = new ArrayList<String>();] : string_type=string_decl string_DECL=decl {
     $res.add($string_type.res);
@@ -300,19 +344,18 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
             if (var.matches("^[a-zA-Z][a-zA-Z0-9]*")) {
                 if (line_split[0].startsWith(";STORE") && line_split[1].equals(var)) {
                     locals.add(var);
-                } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITES")) {
+                } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITE") && !line_split[0].startsWith(";READ")) {
                     func = func.replace(" " + var + " ", " \$L" + local_vars + " ");
                     func = func.replace(" " + var + "\n", " \$L" + local_vars++ + "\n");
                 }
             } else if (var.matches("^_[a-zA-Z][a-zA-Z0-9]*")) {
-                System.out.println(var);
                 func = func.replace(var, var.substring(1, var.length()));
             }
         }
         num++;
     }
 
-    $res = ";LABEL " + $ID.text + "\n;LINK\n";
+    $res = ";LABEL " + $ID.text + " " + (local_vars - 1) + "\n;LINK\n";
     $res += func.replace("  ", " ");
     $res += ";RET\n\n";
 };
