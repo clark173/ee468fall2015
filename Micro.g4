@@ -204,6 +204,30 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("jsr " + line_split[1]);
         } else if (line_split[0].equals(";RET")) {
             System.out.println("unlnk\nret");
+        } else if (line_split[0].equals(";POP")) {
+            if (line_split.length == 1) {
+                System.out.println("pop");
+            } else {
+                if (line_split[1].startsWith("\$L")) {
+                    System.out.println("pop \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+                } else if (line_split[1].startsWith("\$T")) {
+                    System.out.println("pop \$" + (Integer.parseInt(line_split[1].substring(2))));
+                } else {
+                    System.out.println("pop " + line_split[1]);
+                }
+            }
+        } else if (line_split[0].equals(";PUSH")) {
+            if (line_split.length == 1) {
+                System.out.println("push");
+            } else {
+                if (line_split[1].startsWith("\$L")) {
+                    System.out.println("push \$" + (Integer.parseInt(line_split[1].substring(2)) * -1));
+                } else if (line_split[1].startsWith("\$T")) {
+                    System.out.println("push \$" + (Integer.parseInt(line_split[1].substring(2))));
+                } else {
+                    System.out.println("push " + line_split[1]);
+                }
+            }
         } else if (line_split[0].equals(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") ||
                    line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
             char type = 'r';
