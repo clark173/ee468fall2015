@@ -45,26 +45,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     String optimized_out = "";
 
     for (int i = 0; i < split.length; i++) {
-        String line = split[i];
-        Boolean changed = false;
-
-        if (line.startsWith(";JUMP ")) {
-            if (i + 1 < split.length) {
-                if (split[i+1].startsWith(";LABEL ")) {
-                    String num = line.substring(11);
-
-                    if (num.equals(split[i+1].substring(12))) {
-                        changed = true;
-                        optimized_out += ";LABEL label" + num + "\n";
-                        i++;
-                    }
-                }
-            }
-        }
-
-        if (!changed) {
-            optimized_out += line + "\n";
-        }
+        optimized_out += split[i] + "\n";
     }
 
     System.out.println(optimized_out);
@@ -75,8 +56,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     System.out.println("push\npush r0\npush r1\npush r2\npush r3\njsr main\nsys halt");
 
     String[] new_split = optimized_out.split("\n");
-    String previous_line = "";
     int local_var_num = 6;
+    String previous_line = "";
 
     for (String line : new_split) {
         String[] line_split = line.split(" ");
@@ -125,6 +106,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             } else if (line_split[1].startsWith("\$P")) {
                 System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + final_reg);
                 local_var_num = Integer.parseInt(line_split[1].substring(2)) + 6;
+            } else if (line_split[1].startsWith("\$L")) {
+                System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) * -1) + " r" + final_reg);
             } else {
                 System.out.println("move " + line_split[1] + " r" + final_reg);
             }
@@ -141,6 +124,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             } else if (line_split[0].startsWith(";ADD")) {
                 if (line_split[2].startsWith("\$T")) {
                     System.out.println("add" + type + " r" + (Integer.parseInt(line_split[2].substring(2))) + " r" + final_reg);
+                } else if (line_split[2].startsWith("\$L")) {
+                    System.out.println("add" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) * -1) + " r" + final_reg);
                 } else if (line_split[2].startsWith("\$P")) {
                     System.out.println("add" + type + " \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + final_reg);
                     local_var_num = Integer.parseInt(line_split[2].substring(2)) + 6;
@@ -195,9 +180,13 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         } else if (line_split[0].equals(";READS")) {
             System.out.println("sys reads " + line_split[1]);
         } else if (line_split[0].equals(";LABEL")) {
-            local_var_num = 6;
-            System.out.println("label " + line_split[1]);
-            System.out.println("link " + line_split[2]);
+            if (line_split.length > 2) {
+                local_var_num = 6;
+                System.out.println("label " + line_split[1]);
+                System.out.println("link " + line_split[2]);
+            } else {
+                System.out.println("label " + line_split[1]);
+            }
         } else if (line_split[0].equals(";JUMP")) {
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].equals(";JSR")) {
@@ -242,10 +231,22 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
             if ($glob_vars.contains("I " + line_split[1])) {
                 type = 'i';
+            } else if ($glob_vars.contains("F " + line_split[1])) {
+                type = 'r';
+            } else {
+                String[] last_split = previous_line.split(" ");
+
+                if (last_split[0].charAt(last_split[0].length() - 1) == 'I') {
+                    type = 'i';
+                }
             }
 
             if (line_split[1].startsWith("\$T")) {
                 System.out.println("cmp" + type + " r" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[1].substring(2))));
+            } else if (line_split[1].startsWith("\$L")) {
+                System.out.println("cmp" + type + " \$" + (Integer.parseInt(line_split[1].substring(2)) * -1) + " r" + (Integer.parseInt(line_split[2].substring(2))));
+            } else if (line_split[1].startsWith("\$P")) {
+                System.out.println("cmp" + type + " \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + (Integer.parseInt(line_split[2].substring(2))));
             } else {
                 System.out.println("cmp" + type + " " + line_split[1] + " r" + (Integer.parseInt(line_split[2].substring(2))));
             }
@@ -350,7 +351,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
     int local_vars = 1;
     String last_line = func_split[func_split.length - 1];
 
-    if (!last_line.startsWith(";WRITE")) {
+    if (!last_line.startsWith(";WRITE") && !last_line.startsWith(";LABEL") && !last_line.startsWith(";RET")) {
         String[] parts = last_line.split(" ");
         last_line = parts[0] + " " + parts[2] + " \$R\n";
     } else {
@@ -358,7 +359,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
         last_line += "\n;STOREI \$T" + $pgm_body::var_num + " \$R\n";
     }
 
-    func = func.substring(0, func.length() - 1) + last_line;
+    func = func.substring(0, func.length() - 1) + "\n\n";  // + last_line;
     int num = 0;
 
     for (String line : func_split) {
@@ -376,9 +377,11 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
             if (var.matches("^[a-zA-Z][a-zA-Z0-9]*")) {
                 if (line_split[0].startsWith(";STORE") && line_split[1].equals(var)) {
                     locals.add(var);
-                } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITE") && !line_split[0].startsWith(";READ")) {
+                } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITE") && !var.startsWith("label")) {
                     func = func.replace(" " + var + " ", " \$L" + local_vars + " ");
                     func = func.replace(" " + var + "\n", " \$L" + local_vars++ + "\n");
+                } else if (line_split[0].startsWith(";READ")) {
+                    //System.out.println(Arrays.asList(line_split));
                 }
             } else if (var.matches("^_[a-zA-Z][a-zA-Z0-9]*")) {
                 func = func.replace(var, var.substring(1, var.length()));
@@ -389,7 +392,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
 
     $res = ";LABEL " + $ID.text + " " + (local_vars - 1) + "\n;LINK\n";
     $res += func.replace("  ", " ");
-    $res += ";RET\n\n";
+    //$res += ";RET\n\n";
 };
 func_body returns [String res = ""] : decl STMT=stmt_list {
     $res = $STMT.res;
@@ -413,7 +416,9 @@ base_stmt returns [String res = ""] : ASSIGN=assign_stmt {
     $res = $READ.res;
 } | WRITE=write_stmt {
     $res = $WRITE.res;
-} | return_stmt;
+} | RETURN=return_stmt {
+    $res = $RETURN.res;
+};
 
 
 /* Basic Statements */
@@ -453,20 +458,33 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
         }
     }
 
+    Boolean call_statement = false;
+
     if (new_split[0].equals("CALL")) {
+        call_statement = true;
         int num = 0;
 
-        $res += ";PUSH\n";
-        for (int j = 2; j < i; j++) {
-            if (!new_split[j].equals("null")) {
-                num++;
-                $res += ";PUSH " + new_split[j] + " \n";
+        if (i > 3 && new_split[3].charAt(0) == '-') {
+            if (new_split[3].charAt(0) == '-') {
+                $res += ";SUBI " + new_split[2] + " " + new_split[4] + " \$T" + $pgm_body::var_num + "\n";
             }
-        }
-        $res += ";JSR _" + new_split[1] + "\n";
-        $res += ";POP\n";
-        for (int j = 0; j < num - 1; j++) {
+            $res += ";PUSH\n";
+            $res += ";PUSH \$T" + $pgm_body::var_num + "\n";
+            $res += ";JSR _" + new_split[1] + "\n";
+            $res += ";POP \$T" + $pgm_body::var_num++ + "\n";
+        } else {
+            $res += ";PUSH\n";
+            for (int j = 2; j < i; j++) {
+                if (!new_split[j].equals("null")) {
+                    num++;
+                    $res += ";PUSH " + new_split[j] + " \n";
+                }
+            }
+            $res += ";JSR _" + new_split[1] + "\n";
             $res += ";POP\n";
+            for (int j = 0; j < num - 1; j++) {
+                $res += ";POP\n";
+            }
         }
     }
 
@@ -474,6 +492,7 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
         $res += ";STORE" + type + " " + new_split[0] + " \$T" + $pgm_body::var_num + "\n";
         $res += ";STORE" + type + " \$T" + $pgm_body::var_num++ + " " + $ID.text + "\n";
     } else {
+        if (!call_statement) {
         while (i > 1) {
             char op = new_split[1].charAt(0);
             Boolean follows = false;
@@ -523,6 +542,7 @@ assign_expr returns [String res = ""] : ID=id ':=' EXPR=expr {
 
             i -= 2;
         }
+        }
         $res += ";STORE" + type + " \$T" + ($pgm_body::var_num-1) + " " + $ID.text + "\n";
     }
 } ;
@@ -552,7 +572,29 @@ write_stmt returns [String res = ""] : 'WRITE' '(' ID_LIST=id_list ')'';' {
         }
     }
 };
-return_stmt : 'RETURN' expr ';';
+return_stmt returns [String res = ""] : 'RETURN' EXPR=expr ';'{
+    String[] split = $EXPR.res.split(" ");
+    String[] new_split = new String[split.length];
+    int i = 0;
+
+    for (String word : split) {
+        if (word != null && !word.equals("null")) {
+            new_split[i++] = word;
+        }
+    }
+
+    if (i > 1) {
+        if (new_split[1].charAt(0) == '+') {
+            $res += ";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num + "\n";
+        }
+        $res += ";STOREI \$T" + $pgm_body::var_num++ + " \$R\n";
+        $res += ";RET\n";
+    } else {
+        $res += ";STOREI " + new_split[0] + " \$T" + $pgm_body::var_num + " \n";
+        $res += ";STOREI \$T" + $pgm_body::var_num++ + " \$R\n";
+        $res += ";RET\n";
+    }
+};
 
 
 /* Expressions */
