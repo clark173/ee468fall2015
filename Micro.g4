@@ -59,6 +59,126 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     int local_var_num = 6;
     Boolean local_changed = false;
     String previous_line = "";
+    ArrayList<String> live_vars = new ArrayList<String>();
+    String liveness = "\n";
+
+    for (int i = new_split.length - 1; i >= 0; i--) {
+        String[] line_split = new_split[i].split(" ");
+
+        if (line_split[0].startsWith(";WRITE")) {
+            live_vars.add(line_split[1]);
+        } else if (line_split[0].startsWith(";ADD")) {
+            live_vars.add(line_split[1]);
+            live_vars.add(line_split[2]);
+            live_vars.remove(line_split[3]);
+        } else if (line_split[0].startsWith(";MULT")) {
+            live_vars.add(line_split[1]);
+            live_vars.add(line_split[2]);
+            live_vars.remove(line_split[3]);
+        } else if (line_split[0].startsWith(";STORE")) {
+            if (line_split[1].startsWith("\$")) {
+                live_vars.add(line_split[1]);
+            }
+            live_vars.remove(line_split[2]);
+        } else if (line_split[0].startsWith(";POP") && line_split.length > 1) {
+            live_vars.remove(line_split[1]);
+        } else if (line_split[0].startsWith(";PUSH") && line_split.length > 1) {
+            if (!live_vars.contains(line_split[1])) {
+                live_vars.add(line_split[1]);
+            }
+        } else if (line_split[0].startsWith(";READ")) {
+            live_vars.remove(line_split[1]);
+        } else if (line_split[0].startsWith(";RET")) {
+            live_vars.clear();
+        }
+        liveness += live_vars.toString() + "\n";
+    }
+
+    String[] registers = {"", "", "", ""};
+    String[] liveness_line = liveness.split("\n");
+    int line_number = liveness_line.length - 1;
+    Boolean first_line = true;
+
+    for (String line : new_split) {
+        if (first_line) {
+            first_line = false;
+            continue;
+        }
+
+        String[] line_split = line.split(" ");
+        String[] live = liveness_line[line_number].split(" ");
+
+        for (String var : live) {
+            var = var.replace("[", "");
+            var = var.replace(",", "");
+            var = var.replace("]", "");
+            for (int i = 0; i < 4; i++) {
+                if (registers[i].equals(var)) {
+                    registers[i] = "";
+                    break;
+                }
+            }
+        }
+
+        if (line_split[0].equals("")) {
+            //line_number--;
+        } else if (line_split[0].startsWith(";ADD")) {
+            for (int i = 0; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[3];
+                    break;
+                }
+            }
+
+            for (int i = 1; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[2];
+                    break;
+                }
+            }
+        } else if (line_split[0].startsWith(";MULT")) {
+            for (int i = 0; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[3];
+                    break;
+                }
+            }
+
+            for (int i = 1; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[2];
+                    break;
+                }
+            }
+        } else if (line_split[0].startsWith(";LABEL")) {
+            for (int i = 0; i < 4; i++) {
+                registers[i] = "";
+            }
+            if (line_split[1].startsWith("main")) {
+                line_number--;
+            }
+        } else if (line_split[0].startsWith(";STORE")) {
+            for (int i = 0; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[2];
+                    break;
+                }
+            }
+        } else if (line_split[0].startsWith(";READ")) {
+            for (int i = 0; i < 4; i++) {
+                if (registers[i].equals("")) {
+                    registers[i] = line_split[1];
+                    break;
+                }
+            }
+        }
+
+        System.out.println("line starts here");
+        System.out.println(Arrays.asList(line_split));
+        System.out.println(Arrays.asList(registers));
+        System.out.println(liveness_line[line_number]);
+        line_number--;
+    }
 
     for (String line : new_split) {
         String[] line_split = line.split(" ");
