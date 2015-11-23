@@ -1,7 +1,11 @@
 grammar Micro;
 
 @header{
+    import java.io.*;
     import java.util.Arrays;
+    import java.io.File;
+    import java.io.PrintStream;
+    import java.io.FileOutputStream;
 }
 
 COMMENT : '--' ~[\n]* -> skip ;
@@ -49,6 +53,16 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     }
 
     System.out.println(optimized_out);
+
+    try {
+        FileWriter fstream = new FileWriter("ir_code_output.txt");
+        BufferedWriter out_file = new BufferedWriter(fstream);
+        out_file.write(optimized_out);
+        out_file.close();
+    } catch (Exception e) {
+        System.out.println("Error writing to file");
+    }
+
     System.out.println(";tiny code");
     for (String var : vars) {
         System.out.println(var);
@@ -60,7 +74,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     Boolean local_changed = false;
     String previous_line = "";
     ArrayList<String> live_vars = new ArrayList<String>();
-    String liveness = "\n";
+    String liveness = "[]\n";
 
     for (int i = new_split.length - 1; i >= 0; i--) {
         String[] line_split = new_split[i].split(" ");
@@ -96,7 +110,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
     String[] registers = {"", "", "", ""};
     String[] liveness_line = liveness.split("\n");
-    int line_number = liveness_line.length - 1;
+    int line_number = liveness_line.length - 3;
     Boolean first_line = true;
 
     for (String line : new_split) {
@@ -105,27 +119,52 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             continue;
         }
 
+        System.out.println("\n;Line starts here");
+
         String[] line_split = line.split(" ");
         String[] live = liveness_line[line_number].split(" ");
 
-        for (String var : live) {
-            var = var.replace("[", "");
-            var = var.replace(",", "");
-            var = var.replace("]", "");
-            for (int i = 0; i < 4; i++) {
+        System.out.println(";" + Arrays.asList(line_split));
+
+        String current_reg1 = "";
+        String current_reg2 = "";
+        System.out.println(";" + Arrays.asList(registers));
+
+        for (int i = 0; i < 4; i++) {
+            Boolean islive = false;
+            for (String var : live) {
+                var = var.replace("[", "");
+                var = var.replace(",", "");
+                var = var.replace("]", "");
                 if (registers[i].equals(var)) {
-                    registers[i] = "";
+                    islive = true;
                     break;
                 }
             }
+            if (!islive && !registers[i].equals("")) {
+                System.out.println(";Spilling variable: " + registers[i]);
+                registers[i] = "";
+            }
         }
 
-        if (line_split[0].equals("")) {
-            //line_number--;
-        } else if (line_split[0].startsWith(";ADD")) {
+        System.out.println(";" + Arrays.asList(registers));
+        int reg_num = 0;
+        int reg_2_num = 0;
+
+        if (line_split[0].startsWith(";ADD")) {
+            char type = 'r';
+
+            if (line_split[0].charAt(4) == 'I') {
+                type = 'i';
+            }
+
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[3];
+                    reg_num = i;
+                    if (line_split[1].startsWith("\$P")) {
+                        System.out.println(";move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+                    }
                     break;
                 }
             }
@@ -133,13 +172,20 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             for (int i = 1; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[2];
+                    reg_2_num = i;
+                    if (line_split[2].startsWith("\$P")) {
+                        System.out.println(";move \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + i);
+                    }
                     break;
                 }
             }
+
+            System.out.println(";add" + type + " r" + reg_2_num + " r" + reg_num);
         } else if (line_split[0].startsWith(";MULT")) {
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[3];
+                    current_reg1 = line_split[3];
                     break;
                 }
             }
@@ -147,6 +193,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             for (int i = 1; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[2];
+                    current_reg2 = line_split[2];
                     break;
                 }
             }
@@ -155,12 +202,13 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 registers[i] = "";
             }
             if (line_split[1].startsWith("main")) {
-                line_number--;
+                //line_number -= 1;
             }
         } else if (line_split[0].startsWith(";STORE")) {
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[2];
+                    current_reg1 = line_split[2];
                     break;
                 }
             }
@@ -168,15 +216,40 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[1];
+                    current_reg1 = line_split[1];
                     break;
+                }
+            }
+        } else if (line_split[0].startsWith(";POP")) {
+            if (line_split.length > 1) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        registers[i] = line_split[1];
+                        current_reg1 = line_split[1];
+                        break;
+                    }
                 }
             }
         }
 
-        System.out.println("line starts here");
-        System.out.println(Arrays.asList(line_split));
-        System.out.println(Arrays.asList(registers));
-        System.out.println(liveness_line[line_number]);
+        for (int i = 0; i < 4; i++) {
+            Boolean islive = false;
+            for (String var : live) {
+                var = var.replace("[", "");
+                var = var.replace(",", "");
+                var = var.replace("]", "");
+                if (registers[i].equals(var)) {
+                    islive = true;
+                    break;
+                }
+            }
+            if (!islive) {
+                registers[i] = "";
+            }
+        }
+
+        System.out.println(";" + liveness_line[line_number]);
+        System.out.println(";" + Arrays.asList(registers));
         line_number--;
     }
 
