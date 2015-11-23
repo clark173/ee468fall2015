@@ -143,6 +143,31 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         }
 
+        if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT")) {
+            if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
+
+            }
+        } else if (line_split[0].startsWith(";STORE")) {
+            if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
+                Boolean reg_cleared = false;
+
+                for (int i = 0; i < 4; i++) {
+                    if (!reg_cleared) {
+                        for (String var : live) {
+                            var = var.replace("[", "");
+                            var = var.replace(",", "");
+                            var = var.replace("]", "");
+                            if (registers[i].equals(var)) {
+                                registers[i] = "";
+                                reg_cleared = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         System.out.println(";" + Arrays.asList(registers));
         int reg_num = 0;
         int reg_2_num = 0;
