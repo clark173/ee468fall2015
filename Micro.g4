@@ -1,11 +1,7 @@
 grammar Micro;
 
 @header{
-    import java.io.*;
     import java.util.Arrays;
-    import java.io.File;
-    import java.io.PrintStream;
-    import java.io.FileOutputStream;
 }
 
 COMMENT : '--' ~[\n]* -> skip ;
@@ -53,15 +49,6 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     }
 
     System.out.println(optimized_out);
-
-    try {
-        FileWriter fstream = new FileWriter("ir_code_output.txt");
-        BufferedWriter out_file = new BufferedWriter(fstream);
-        out_file.write(optimized_out);
-        out_file.close();
-    } catch (Exception e) {
-        System.out.println("Error writing to file");
-    }
 
     System.out.println(";tiny code");
     for (String var : vars) {
@@ -130,9 +117,6 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         String[] live = liveness_line[line_number].split(" ");
 
         System.out.println(";" + Arrays.asList(line_split));
-
-        String current_reg1 = "";
-        String current_reg2 = "";
         System.out.println(";" + Arrays.asList(registers));
 
         for (int i = 0; i < 4; i++) {
@@ -228,29 +212,45 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 System.out.println(";link " + line_split[2]);
             }
         } else if (line_split[0].startsWith(";STORE")) {
+            int second_reg = -1;
+
             for (int i = 0; i < 4; i++) {
-                System.out.println(registers[i]);
                 if (registers[i].equals(line_split[1])) {
                     if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$L")) {
-                        System.out.println(";move r" + (Integer.parseInt(line_split[1].substring(2))) + " \$-" + (Integer.parseInt(line_split[2].substring(2))));
+                        System.out.println(";move r" + i + " \$-" + (Integer.parseInt(line_split[2].substring(2))));
                     } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$T")) {
                         System.out.println(";move \$-" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[2].substring(2))));
                     }
                 }
 
-                if (registers[i].equals("")) {
+                if (registers[i].equals("") && second_reg == -1) {
                     registers[i] = line_split[2];
-                    current_reg1 = line_split[2];
-                    break;
+                    second_reg = i;
                 }
             }
-        } else if (line_split[0].startsWith(";WRITES")) {
-            System.out.println(";sys writes " + line_split[1]);
+        } else if (line_split[0].startsWith(";WRITE")) {
+            char type = 'r';
+
+            if (line_split[0].charAt(6) == 'S') {
+                type = 's';
+            } else if (line_split[0].charAt(6) == 'I') {
+                type = 'i';
+            }
+
+            if (type != 's') {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals(line_split[1])) {
+                        System.out.println(";sys write" + type + " r" + i);
+                        break;
+                    }
+                }
+            } else {
+                System.out.println(";sys writes " + line_split[1]);
+            }
         } else if (line_split[0].startsWith(";READ")) {
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals("")) {
                     registers[i] = line_split[1];
-                    current_reg1 = line_split[1];
                     break;
                 }
             }
@@ -263,7 +263,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                         break;
                     }
                 }
-                System.out.println(";pop " + registers[reg_num]);
+                System.out.println(";pop r" + reg_num);
             } else {
                 System.out.println(";pop");
             }
