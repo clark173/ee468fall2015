@@ -242,8 +242,10 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
             System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
         } else if (line_split[0].startsWith(";LABEL")) {
-            for (int i = 0; i < 4; i++) {
-                registers[i] = "";
+            if (line_split.length > 2) {
+                for (int i = 0; i < 4; i++) {
+                    registers[i] = "";
+                }
             }
 
             System.out.println("label " + line_split[1]);
@@ -337,6 +339,20 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         } else if (line_split[0].startsWith(";PUSH")) {
             if (line_split.length > 1) {
+                if (!registers[0].equals(line_split[1]) && !registers[1].equals(line_split[1]) && !registers[2].equals(line_split[1]) && !registers[3].equals(line_split[1])) {
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals("")) {
+                            if (line_split[1].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                                registers[i] = line_split[1];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (line_split.length > 1) {
                 for (int i = 0; i < 4; i++) {
                     if (registers[i].equals(line_split[1])) {
                         System.out.println("push r" + i);
@@ -347,6 +363,26 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         } else if (line_split[0].startsWith(";JSR")) {
             System.out.println("push r0\npush r1\npush r2\npush r3\njsr " + line_split[1] + "\npop r3\npop r2\npop r1\npop r0");
+        } else if (line_split[0].startsWith(";JUMP")) {
+            System.out.println("jmp " + line_split[1]);
+        } else if (line_split[0].startsWith(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") || line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
+            char type = 'r';
+
+            if ($glob_vars.contains("I " + line_split[1])) {
+                type = 'i';
+            } else if ($glob_vars.contains("F " + line_split[1])) {
+                type = 'r';
+            } else {
+                String[] last_split = previous_line.split(" ");
+
+                if (last_split[0].charAt(last_split[0].length() - 1) == 'I') {
+                    type = 'i';
+                }
+            }
+
+            if (line_split[1].startsWith("\$T")) {
+                //System.out.println("cmp" + type + " r");
+            }
         } else if (line_split[0].startsWith(";RET")) {
             System.out.println("unlnk");
             System.out.println("ret");
@@ -370,6 +406,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
         System.out.println(";" + liveness_line[line_number]);
         System.out.println(";" + Arrays.asList(registers));
+        previous_line = line;
         line_number--;
     }
 
