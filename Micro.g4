@@ -145,7 +145,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
         if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT")) {
             if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
-
+                
             }
         } else if (line_split[0].startsWith(";STORE")) {
             if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
@@ -157,7 +157,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                             var = var.replace("[", "");
                             var = var.replace(",", "");
                             var = var.replace("]", "");
-                            if (registers[i].equals(var)) {
+                            if (registers[i].equals(var) && !var.equals(line_split[1])) {
                                 if (line_split[2].startsWith("\$L")) {
                                     System.out.println("move r" + i + " \$-" + Integer.parseInt(registers[i].substring(2)));
                                 }
