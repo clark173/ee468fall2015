@@ -213,34 +213,61 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         } else if (line_split[0].startsWith(";MULT")) {
             char type = 'r';
+            Boolean complete = false;
 
             if (line_split[0].charAt(5) == 'I') {
                 type = 'i';
             }
 
-            for (int i = 0; i < 4; i++) {
-                if (registers[i].equals("")) {
-                    registers[i] = line_split[3];
-                    reg_num = i;
-                    if (line_split[1].startsWith("\$P")) {
-                        System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+            if ((registers[0].equals(line_split[1]) || registers[1].equals(line_split[1]) || registers[2].equals(line_split[2]) || registers[3].equals(line_split[1])) && (registers[0].equals(line_split[2]) || registers[1].equals(line_split[2]) || registers[2].equals(line_split[2]) || registers[3].equals(line_split[2]))) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals(line_split[1])) {
+                        reg_num = i;
+                    } else if (registers[i].equals(line_split[2])) {
+                        reg_2_num = i;
                     }
-                    break;
                 }
+
+                for (String var : live) {
+                    var = var.replace("[", "");
+                    var = var.replace(",", "");
+                    var = var.replace("]", "");
+                    if (var.equals(line_split[2])) {
+                        System.out.println("move r" + reg_2_num + " \$-" + Integer.parseInt(line_split[2].substring(2)));
+                        break;
+                    }
+                }
+
+                registers[reg_2_num] = line_split[3];
+                System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
+                complete = true;
             }
 
-            for (int i = 1; i < 4; i++) {
-                if (registers[i].equals("")) {
-                    registers[i] = line_split[2];
-                    reg_2_num = i;
-                    if (line_split[2].startsWith("\$P")) {
-                        System.out.println("move \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + i);
+            if (!complete) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        registers[i] = line_split[3];
+                        reg_num = i;
+                        if (line_split[1].startsWith("\$P")) {
+                            System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+                        }
+                        break;
                     }
-                    break;
                 }
+
+                for (int i = 1; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        registers[i] = line_split[2];
+                        reg_2_num = i;
+                        if (line_split[2].startsWith("\$P")) {
+                            System.out.println("move \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + i);
+                        }
+                        break;
+                    }
+                }
+                System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
             }
 
-            System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
         } else if (line_split[0].startsWith(";LABEL")) {
             if (line_split.length > 2) {
                 for (int i = 0; i < 4; i++) {
