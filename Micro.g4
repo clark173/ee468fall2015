@@ -326,10 +326,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals(line_split[1])) {
                     if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$L")) {
-                        //System.out.println("move r" + i + " \$-" + (Integer.parseInt(line_split[2].substring(2))));
                         System.out.println("move r" + i + " r" + second_reg);
                     } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$T")) {
-                        //System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2))) + " r" + (Integer.parseInt(line_split[2].substring(2))));
                         System.out.println("move r" + i + " r" + second_reg);
                     } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$R")) {
                         System.out.println("move r" + i + " \$" + (num_link + 6));
@@ -427,6 +425,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].startsWith(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") || line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
             char type = 'r';
+            Boolean complete = false;
 
             if ($glob_vars.contains("I " + line_split[1])) {
                 type = 'i';
@@ -440,8 +439,49 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 }
             }
 
-            if (line_split[1].startsWith("\$T")) {
-                //System.out.println("cmp" + type + " r");
+            if ((registers[0].equals(line_split[1]) || registers[1].equals(line_split[1]) || registers[2].equals(line_split[1]) || registers[3].equals(line_split[1])) && (registers[0].equals(line_split[2]) || registers[1].equals(line_split[2]) || registers[2].equals(line_split[2]) || registers[3].equals(line_split[2]))) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals(line_split[1])) {
+                        reg_num = i;
+                    } else if (registers[i].equals(line_split[2])) {
+                        reg_2_num = i;
+                    }
+                }
+                complete = true;
+            }
+            
+            if (!complete) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        reg_num = i;
+                        registers[i] = line_split[1];
+                        break;
+                    }
+                }
+                
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        reg_2_num = i;
+                        registers[i] = line_split[2];
+                        break;
+                    }
+                }
+            }
+            
+            System.out.println("cmp" + type + " r" + reg_num + " r" + reg_2_num);
+                
+            if (line_split[0].startsWith(";EQ")) {
+                System.out.println("jeq " + line_split[3]);
+            } else if (line_split[0].startsWith(";LT")) {
+                System.out.println("jlt " + line_split[3]);
+            } else if (line_split[0].startsWith(";NE")) {
+                System.out.println("jne " + line_split[3]);
+            } else if (line_split[0].startsWith(";GT")) {
+                System.out.println("jgt " + line_split[3]);
+            } else if (line_split[0].startsWith(";GE")) {
+                System.out.println("jge " + line_split[3]);
+            } else if (line_split[0].startsWith(';LE")) {
+                System.out.println("jle " + line_split[3]);
             }
         } else if (line_split[0].startsWith(";RET")) {
             System.out.println("unlnk");
@@ -1008,6 +1048,12 @@ return_stmt returns [String res = ""] : 'RETURN' EXPR=expr ';'{
     if (i > 1) {
         if (new_split[1].charAt(0) == '+') {
             $res += ";ADDI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num + "\n";
+        } else if (new_split[1].charAt(0) == '-') {
+            $res += ";SUBI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num + "\n";
+        } else if (new_split[1].charAt(0) == '*') {
+            $res += ";MULTI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num + "\n";
+        } else if (new_split[1].charAt(0) == '/') {
+            $res += ";DIVI " + new_split[0] + " " + new_split[2] + " \$T" + $pgm_body::var_num + "\n";
         }
         $res += ";STOREI \$T" + $pgm_body::var_num++ + " \$R\n";
         $res += ";RET\n";
