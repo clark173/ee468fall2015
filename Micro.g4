@@ -202,29 +202,29 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     }
                 }
 
-                registers[reg_2_num] = line_split[3];
+                registers[reg_num] = line_split[3];
                 if (line_split[0].startsWith(";ADD")) {
-                    System.out.println("add" + type + " r" + reg_2_num + " r" + reg_num);
+                    System.out.println("add" + type + " r" + reg_num + " r" + reg_2_num);
                 } else if (line_split[0].startsWith(";DIV")) {
-                    System.out.println("div" + type + " r" + reg_2_num + " r" + reg_num);
+                    System.out.println("div" + type + " r" + reg_num + " r" + reg_2_num);
                 } else if (line_split[0].startsWith(";SUB")) {
-                    System.out.println("sub" + type + " r" + reg_2_num + " r" + reg_num);
+                    System.out.println("sub" + type + " r" + reg_num + " r" + reg_2_num);
                 }
                 complete = true;
             }
 
-            for (int i = 0; i < 4; i++) {
-                if (registers[i].equals("")) {
-                    registers[i] = line_split[3];
-                    reg_num = i;
-                    if (line_split[1].startsWith("\$P")) {
-                        System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
-                    }
-                    break;
-                }
-            }
-
             if (!complete) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("")) {
+                        registers[i] = line_split[3];
+                        reg_num = i;
+                        if (line_split[1].startsWith("\$P")) {
+                            System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+                        }
+                        break;
+                    }
+                }
+
                 for (int i = 1; i < 4; i++) {
                     if (registers[i].equals("")) {
                         registers[i] = line_split[2];
@@ -271,7 +271,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     }
                 }
 
-                registers[reg_2_num] = line_split[3];
+                registers[reg_num] = line_split[3];
                 System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
                 complete = true;
             }
