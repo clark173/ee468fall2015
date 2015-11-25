@@ -221,12 +221,14 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     }
                 }
 
-                registers[reg_2_num] = line_split[3];
                 if (line_split[0].startsWith(";ADD")) {
+                    registers[reg_2_num] = line_split[3];
                     System.out.println("add" + type + " r" + reg_num + " r" + reg_2_num);
                 } else if (line_split[0].startsWith(";DIV")) {
-                    System.out.println("div" + type + " r" + reg_num + " r" + reg_2_num);
+                    registers[reg_num] = line_split[3];
+                    System.out.println("div" + type + " r" + reg_2_num + " r" + reg_num);
                 } else if (line_split[0].startsWith(";SUB")) {
+                    registers[reg_2_num] = line_split[3];
                     System.out.println("sub" + type + " r" + reg_num + " r" + reg_2_num);
                 }
                 complete = true;
@@ -994,6 +996,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
                 if (line_split[0].startsWith(";STORE") && line_split[1].equals(var)) {
                     locals.add(var);
                 } else if (!locals.contains(var) && !line_split[0].startsWith(";WRITE") && !var.startsWith("label")) {
+                    func = func.replace(" " + var + " " + var + " ", " \$L" + local_vars + " \$L" + local_vars + " ");
                     func = func.replace(" " + var + " ", " \$L" + local_vars + " ");
                     func = func.replace(" " + var + "\n", " \$L" + local_vars++ + "\n");
                 }
