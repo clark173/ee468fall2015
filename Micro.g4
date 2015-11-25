@@ -480,7 +480,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 System.out.println("jgt " + line_split[3]);
             } else if (line_split[0].startsWith(";GE")) {
                 System.out.println("jge " + line_split[3]);
-            } else if (line_split[0].startsWith(';LE")) {
+            } else if (line_split[0].startsWith(";LE")) {
                 System.out.println("jle " + line_split[3]);
             }
         } else if (line_split[0].startsWith(";RET")) {
