@@ -214,6 +214,73 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
 
             if (!complete) {
+                if (registers[0].equals(line_split[1]) || registers[1].equals(line_split[1]) || registers[2].equals(line_split[1]) || registers[3].equals(line_split[1])) {
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals(line_split[1])) {
+                            registers[i] = line_split[3];
+                            reg_num = i;
+                            if (line_split[1].startsWith("\$P")) {
+                                System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+                            } else if (line_split[1].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                            }
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals("")) {
+                            registers[i] = line_split[2];
+                            if (line_split[2].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[2].substring(2)) + " r" + i);
+                            }
+                            reg_2_num = i;
+                        }
+                    }
+
+                    if (line_split[0].startsWith(";ADD")) {
+                        System.out.println("add" + type + " r" + reg_2_num + " r" + reg_num);
+                    } else if (line_split[0].startsWith(";DIV")) {
+                        System.out.println("div" + type + " r" + reg_2_num + " r" + reg_num);
+                    } else if (line_split[0].startsWith(";SUB")) {
+                        System.out.println("sub" + type + " r" + reg_2_num + " r" + reg_num);
+                    }
+                    complete = true;
+                }
+            }
+
+            if (!complete) {
+                if (registers[0].equals(line_split[2]) || registers[1].equals(line_split[2]) || registers[2].equals(line_split[2]) || registers[3].equals(line_split[2])) {
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals(line_split[2])) {
+                            reg_2_num = i;
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals("")) {
+                            registers[i] = line_split[3];
+                            if (line_split[1].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                            }
+                            reg_num = i;
+                            break;
+                        }
+                    }
+
+                    if (line_split[0].startsWith(";ADD")) {
+                        System.out.println("add" + type + " r" + reg_2_num + " r" + reg_num);
+                    } else if (line_split[0].startsWith(";DIV")) {
+                        System.out.println("div" + type + " r" + reg_2_num + " r" + reg_num);
+                    } else if (line_split[0].startsWith(";SUB")) {
+                        System.out.println("sub" + type + " r" + reg_2_num + " r" + reg_num);
+                    }
+                    complete = true;
+                }
+            }
+
+            if (!complete) {
                 for (int i = 0; i < 4; i++) {
                     if (registers[i].equals("")) {
                         registers[i] = line_split[3];
