@@ -63,6 +63,14 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     ArrayList<String> live_vars = new ArrayList<String>();
     String liveness = "[]\n";
 
+    for (String line : new_split) {
+        String[] line_split = line.split(" ");
+
+        if (line_split[0].startsWith(";EQ")) {
+
+        }
+    }
+
     for (int i = new_split.length - 1; i >= 0; i--) {
         String[] line_split = new_split[i].split(" ");
 
@@ -610,6 +618,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
 
             if (!line_split[1].startsWith("\$")) {
                 System.out.println("move " + line_split[1] + " r" + second_reg);
+                registers[second_reg] = line_split[2];
             }
         } else if (line_split[0].startsWith(";WRITE")) {
             char type = 'r';
@@ -722,6 +731,44 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     }
                 }
                 complete = true;
+            }
+
+            if (!complete) {
+                if (registers[0].equals(line_split[1]) || registers[1].equals(line_split[1]) || registers[2].equals(line_split[1]) || registers[3].equals(line_split[1])) {
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals(line_split[1])) {
+                            reg_num = i;
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals("")) {
+                            reg_2_num = i;
+                            break;
+                        }
+                    }
+
+                    complete = true;
+                }
+            }
+
+            if (!complete) {
+                if (registers[0].equals(line_split[2]) || registers[1].equals(line_split[2]) || registers[2].equals(line_split[2]) || registers[3].equals(line_split[2])) {
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals(line_split[2])) {
+                            reg_2_num = i;
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < 4; i++) {
+                        if (registers[i].equals("")) {
+                            reg_num = i;
+                            break;
+                        }
+                    }
+
+                    complete = true;
+                }
             }
             
             if (!complete) {
