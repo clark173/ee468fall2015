@@ -238,8 +238,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     registers[reg_num] = line_split[3];
                     System.out.println("div" + type + " r" + reg_2_num + " r" + reg_num);
                 } else if (line_split[0].startsWith(";SUB")) {
-                    registers[reg_2_num] = line_split[3];
-                    System.out.println("sub" + type + " r" + reg_num + " r" + reg_2_num);
+                    registers[reg_num] = line_split[3];
+                    System.out.println("sub" + type + " r" + reg_2_num + " r" + reg_num);
                 }
                 complete = true;
             }
@@ -366,6 +366,10 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                             reg_num = i;
                             if (line_split[1].startsWith("\$P")) {
                                 System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
+                            } else if (line_split[1].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                            } else if (line_split[1].startsWith("\$T")) {
+                                System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
                             }
                             break;
                         }
@@ -377,6 +381,10 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                             reg_2_num = i;
                             if (line_split[2].startsWith("\$P")) {
                                 System.out.println("move \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + i);
+                            } else if (line_split[2].startsWith("\$L")) {
+                                System.out.println("move \$-" + Integer.parseInt(line_split[2].substring(2)) + " r" + i);
+                            } else if (line_split[2].startsWith("\$T")) {
+                                System.out.println("move \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100) + " r" + i);
                             }
                             break;
                         }
@@ -511,7 +519,6 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 }
                 System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
             }
-
         } else if (line_split[0].startsWith(";LABEL")) {
             if (line_split.length > 2) {
                 for (int i = 0; i < 4; i++) {
