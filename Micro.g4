@@ -581,6 +581,16 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 for (int i = 0; i < 4; i++) {
                     registers[i] = "";
                 }
+            } else {
+                for (int i = 0; i < 4; i++) {
+                    if (!registers[i].equals("")) {
+                        if (registers[i].startsWith("\$L")) {
+                            System.out.println("move \$-" + Integer.parseInt(registers[i].substring(2)) + " r" + i);
+                        } else if (registers[i].startsWith("\$T")) {
+                            System.out.println("move \$-" + (Integer.parseInt(registers[i].substring(2)) + 100) + " r" + i);
+                        }
+                    }
+                }
             }
 
             System.out.println("label " + line_split[1]);
