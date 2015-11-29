@@ -159,7 +159,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         }
 
-        if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT")) {
+        if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT") || line_split[0].startsWith(";EQ") || line_split[0].startsWith(";LE")) {
             if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
                 int num_replaced = 0;
                 
@@ -797,6 +797,11 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     if (registers[i].equals("")) {
                         reg_num = i;
                         registers[i] = line_split[1];
+                        if (line_split[1].startsWith("\$L")) {
+                            System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                        } else if (line_split[1].startsWith("\$T")) {
+                            System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
+                        }
                         break;
                     }
                 }
@@ -805,6 +810,11 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     if (registers[i].equals("")) {
                         reg_2_num = i;
                         registers[i] = line_split[2];
+                        if (line_split[1].startsWith("\$L")) {
+                            System.out.println("move \$-" + Integer.parseInt(line_split[2].substring(2)) + " r" + i);
+                        } else if (line_split[2].startsWith("\$T")) {
+                            System.out.println("move \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100) + " r" + i);
+                        }
                         break;
                     }
                 }
