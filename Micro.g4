@@ -630,6 +630,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             if (!line_split[1].startsWith("\$")) {
                 System.out.println("move " + line_split[1] + " r" + second_reg);
                 registers[second_reg] = line_split[2];
+                System.out.println("move r" + second_reg + " \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100));
             }
         } else if (line_split[0].startsWith(";WRITE")) {
             char type = 'r';
@@ -672,10 +673,15 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 if (registers[i].equals("")) {
                     registers[i] = line_split[1];
                     reg_num = i;
+                    System.out.println("sys read" + type + " r" + reg_num);
+                    if (line_split[1].startsWith("\$T")) {
+                        System.out.println("move r" + i + " \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100));
+                    } else if (line_split[1].startsWith("\$L")) {
+                        System.out.println("move r" + i + " \$-" + Integer.parseInt(line_split[1].substring(2)));
+                    }
                     break;
                 }
             }
-            System.out.println("sys read" + type + " r" + reg_num);
         } else if (line_split[0].startsWith(";POP")) {
             if (line_split.length > 1) {
                 for (int i = 0; i < 4; i++) {
@@ -810,7 +816,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     if (registers[i].equals("")) {
                         reg_2_num = i;
                         registers[i] = line_split[2];
-                        if (line_split[1].startsWith("\$L")) {
+                        if (line_split[2].startsWith("\$L")) {
                             System.out.println("move \$-" + Integer.parseInt(line_split[2].substring(2)) + " r" + i);
                         } else if (line_split[2].startsWith("\$T")) {
                             System.out.println("move \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100) + " r" + i);
