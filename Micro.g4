@@ -577,11 +577,16 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 System.out.println("mul" + type + " r" + reg_2_num + " r" + reg_num);
             }
         } else if (line_split[0].startsWith(";LABEL")) {
+            System.out.println("label " + line_split[1]);
+
             if (line_split.length > 2) {
                 for (int i = 0; i < 4; i++) {
                     registers[i] = "";
                 }
+                num_link = (Integer.parseInt(line_split[2]) + 1);
+                System.out.println("link " + num_link);
             } else {
+                System.out.println(";Reloading current registers");
                 for (int i = 0; i < 4; i++) {
                     if (!registers[i].equals("")) {
                         if (registers[i].startsWith("\$L")) {
@@ -591,12 +596,6 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                         }
                     }
                 }
-            }
-
-            System.out.println("label " + line_split[1]);
-            if (line_split.length > 2) {
-                num_link = (Integer.parseInt(line_split[2]) + 1);
-                System.out.println("link " + num_link);
             }
         } else if (line_split[0].startsWith(";STORE")) {
             int second_reg = -1;
@@ -717,8 +716,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         } else if (line_split[0].startsWith(";JSR")) {
             System.out.println("push r0\npush r1\npush r2\npush r3\njsr " + line_split[1] + "\npop r3\npop r2\npop r1\npop r0");
         } else if (line_split[0].startsWith(";JUMP")) {
+            System.out.println(";Saving current registers");
             for (int i = 0; i < 4; i++) {
-                System.out.println(";Saving current registers");
                 if (!registers[i].equals("")) {
                     if (registers[i].startsWith("\$L")) {
                        System.out.println("move r" + i + " \$-" + Integer.parseInt(registers[i].substring(2)));
