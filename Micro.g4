@@ -159,7 +159,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             }
         }
 
-        if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT") || line_split[0].startsWith(";EQ") || line_split[0].startsWith(";LE")) {
+        if (line_split[0].startsWith(";ADD") || line_split[0].startsWith(";DIV") || line_split[0].startsWith(";SUB") || line_split[0].startsWith(";MULT") || line_split[0].startsWith(";EQ") || line_split[0].startsWith(";LE") || line_split[0].startsWith(";LT") || line_split[0].startsWith(";NE") || line_split[0].startsWith(";GT") || line_split[0].startsWith(";GE")) {
             if (!registers[0].equals("") && !registers[1].equals("") && !registers[2].equals("") && !registers[3].equals("")) {
                 int num_replaced = 0;
                 
