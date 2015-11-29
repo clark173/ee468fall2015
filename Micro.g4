@@ -707,6 +707,16 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
         } else if (line_split[0].startsWith(";JSR")) {
             System.out.println("push r0\npush r1\npush r2\npush r3\njsr " + line_split[1] + "\npop r3\npop r2\npop r1\npop r0");
         } else if (line_split[0].startsWith(";JUMP")) {
+            for (int i = 0; i < 4; i++) {
+                System.out.println(";Saving current registers");
+                if (!registers[i].equals("")) {
+                    if (registers[i].startsWith("\$L")) {
+                       System.out.println("move r" + i + " \$-" + Integer.parseInt(registers[i].substring(2)));
+                    } else if (registers[i].startsWith("\$T")) {
+                        System.out.println("move r" + i + " \$-" + (Integer.parseInt(registers[i].substring(2)) + 100));
+                    }
+                }
+            }
             System.out.println("jmp " + line_split[1]);
         } else if (line_split[0].startsWith(";EQ") || line_split[0].equals(";LT") || line_split[0].equals(";NE") || line_split[0].equals(";GT") || line_split[0].equals(";GE") || line_split[0].equals(";LE")) {
             char type = 'r';
