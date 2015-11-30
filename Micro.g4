@@ -610,6 +610,33 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                 }
             }
 
+            if (!registers[0].equals(line_split[1]) && !registers[1].equals(line_split[1]) && !registers[2].equals(line_split[1]) && !registers[3].equals(line_split[1]) && !line_split[1].matches("\\d+(.\\d+)?")) {
+                for (int i = 0; i < 4; i++) {
+                    if (registers[i].equals("") && (i != second_reg)) {
+                        if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$L")) {
+                            System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
+                            System.out.println("move r" + i + " r" + second_reg);
+                        } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$T")) {
+                            System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
+                            System.out.println("move r" + i + " r" + second_reg);
+                        } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$R")) {
+                            System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
+                            System.out.println("move r" + i + " \$" + (num_params + 6));
+                        } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
+                            System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
+                            System.out.println("move r" + i + " r" + second_reg);
+                        }
+                        break;
+                    }
+                }
+
+                if (line_split[2].startsWith("\$L")) {
+                    System.out.println("move r" + second_reg + " \$-" + Integer.parseInt(line_split[2].substring(2)));
+                } else if (line_split[2].startsWith("\$T")) {
+                    System.out.println("move r" + second_reg + " \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100));
+                }
+            }
+
             for (int i = 0; i < 4; i++) {
                 if (registers[i].equals(line_split[1])) {
                     if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$L")) {
@@ -1565,7 +1592,13 @@ if_stmt returns [String res = ""] : 'IF' '(' COND=cond ')' DECL=decl STMT=stmt_l
         }
     }
 
-    $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    if (new_cond_split[2].matches("\\d+.\\d+") || new_cond_split[0].matches("\\d+.\\d+")) {
+        $res += ";STOREF " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    } else if (new_cond_split[2].startsWith("\$T") || new_cond_split[2].startsWith("\$L")) {
+        $res += ";STOREF " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    } else {
+        $res += ";STOREI " + new_cond_split[2] + " \$T" + $pgm_body::var_num + "\n";
+    }
     $res += instructions[Arrays.asList(ops).indexOf(new_cond_split[1])]+ " " + new_cond_split[0] + " \$T" + $pgm_body::var_num + " label" + ($pgm_body::label_num) + "\n";
     $res += $STMT.res;
     $res += ";JUMP label" + ($pgm_body::label_num + 1) + "\n";
