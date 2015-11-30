@@ -119,6 +119,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
     int line_number = liveness_line.length - 3;
     Boolean first_line = true;
     int num_link = 0;
+    int num_params = 0;
 
     for (String line : new_split) {
         String[] line_split = line.split(" ");
@@ -128,6 +129,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
             if (line_split.length > 2) {
                 System.out.println("link " + (Integer.parseInt(line_split[2]) + 1));
                 num_link = Integer.parseInt(line_split[2]) + 1;
+                num_params = Integer.parseInt(line_split[3]);
             }
             first_line = false;
             continue;
@@ -584,6 +586,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     registers[i] = "";
                 }
                 num_link = (Integer.parseInt(line_split[2]) + 1);
+                num_params = Integer.parseInt(line_split[3]);
                 System.out.println("link " + num_link);
             } else {
                 System.out.println(";Reloading current registers");
@@ -614,7 +617,7 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                     } else if (line_split[1].startsWith("\$L") && line_split[2].startsWith("\$T")) {
                         System.out.println("move r" + i + " r" + second_reg);
                     } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$R")) {
-                        System.out.println("move r" + i + " \$" + (num_link + 6));
+                        System.out.println("move r" + i + " \$" + (num_params + 6));
                     } else if (line_split[1].startsWith("\$T") && line_split[2].startsWith("\$T")) {
                         System.out.println("move r" + i + " r" + second_reg);
                     }
@@ -807,6 +810,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                             System.out.println("move \$-" + Integer.parseInt(line_split[1].substring(2)) + " r" + i);
                         } else if (line_split[1].startsWith("\$T")) {
                             System.out.println("move \$-" + (Integer.parseInt(line_split[1].substring(2)) + 100) + " r" + i);
+                        } else if (line_split[1].startsWith("\$P")) {
+                            System.out.println("move \$" + (Integer.parseInt(line_split[1].substring(2)) + 5) + " r" + i);
                         }
                         break;
                     }
@@ -820,6 +825,8 @@ pgm_body locals [int label_num = 1, int var_num = 1, ArrayList<String> glob_vars
                             System.out.println("move \$-" + Integer.parseInt(line_split[2].substring(2)) + " r" + i);
                         } else if (line_split[2].startsWith("\$T")) {
                             System.out.println("move \$-" + (Integer.parseInt(line_split[2].substring(2)) + 100) + " r" + i);
+                        } else if (line_split[2].startsWith("\$P")) {
+                            System.out.println("move \$" + (Integer.parseInt(line_split[2].substring(2)) + 5) + " r" + i);
                         }
                         break;
                     }
@@ -1152,6 +1159,7 @@ func_declarations returns [String res = ""] : FUNC=func_decl PREV_FUNC=func_decl
 func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_decl_list')' 'BEGIN' FUNC=func_body 'END' {
     String func = $FUNC.res.replace("\n\n", "\n");
     ArrayList<String> locals = new ArrayList<String>();
+    int num_params = 0;
 
     if ($PARAMS.res != null) {
         String[] params = $PARAMS.res.split(" ");
@@ -1160,6 +1168,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
         for (String var : $PARAMS.res.split(" ")) {
             if (!var.equals("null")) {
                 func = func.replace(" " + var + " ", " \$P" + i++ + " ");
+                num_params++;
             }
         }
     }
@@ -1212,7 +1221,7 @@ func_decl returns [String res = ""] : 'FUNCTION' any_type ID=id '('PARAMS=param_
         previous_line = line;
     }
 
-    $res = ";LABEL " + $ID.text + " " + (local_vars - 1) + "\n;LINK\n";
+    $res = ";LABEL " + $ID.text + " " + (local_vars - 1) + " " + num_params + "\n;LINK\n";
     $res += func.replace("  ", " ");
 };
 func_body returns [String res = ""] : decl STMT=stmt_list {
